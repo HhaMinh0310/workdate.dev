@@ -20,6 +20,7 @@ export const Register: React.FC = () => {
 
     try {
       await signUp(email, password, displayName);
+      // After successful registration, redirect to home
       navigate('/');
     } catch (err: any) {
       setError(err.message || 'Failed to sign up');

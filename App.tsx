@@ -1,6 +1,8 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
+import { ProtectedRoute } from './components/ProtectedRoute';
+import { Navbar } from './components/Navbar';
 import { Landing } from './pages/Landing';
 import { CoupleDashboard } from './pages/couple/CoupleDashboard';
 import { CoupleSessionRoom } from './pages/couple/CoupleSession';
@@ -61,15 +63,62 @@ const App: React.FC = () => {
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           
-          {/* Couple Routes */}
-          <Route path="/couple" element={<CoupleDashboard />} />
-          <Route path="/couple/create" element={<CoupleCreate />} />
-          <Route path="/couple/session/:id" element={<CoupleSessionRoom />} />
+          {/* Protected Routes - Require Authentication */}
+          <Route 
+            path="/couple" 
+            element={
+              <ProtectedRoute>
+                <Navbar />
+                <CoupleDashboard />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/couple/create" 
+            element={
+              <ProtectedRoute>
+                <Navbar />
+                <CoupleCreate />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/couple/session/:id" 
+            element={
+              <ProtectedRoute>
+                <CoupleSessionRoom />
+              </ProtectedRoute>
+            } 
+          />
 
           {/* Solo Routes */}
-          <Route path="/solo" element={<SoloDashboard />} />
-          <Route path="/solo/create" element={<SoloCreate />} />
-          <Route path="/solo/browse" element={<SoloBrowse />} />
+          <Route 
+            path="/solo" 
+            element={
+              <ProtectedRoute>
+                <Navbar />
+                <SoloDashboard />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/solo/create" 
+            element={
+              <ProtectedRoute>
+                <Navbar />
+                <SoloCreate />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/solo/browse" 
+            element={
+              <>
+                <Navbar />
+                <SoloBrowse />
+              </>
+            } 
+          />
         </Routes>
       </Router>
     </AuthProvider>

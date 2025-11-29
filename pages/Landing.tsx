@@ -58,8 +58,22 @@ export const Landing: React.FC = () => {
           </Link>
         </div>
         
-        <div className="pt-8 text-slate-500 text-sm">
-          MVP Demo Version &copy; 2024 Workdate.dev
+        <div className="pt-8 flex flex-col items-center gap-4">
+          <div className="flex gap-4">
+            <Link to="/login">
+              <Button variant="ghost" size="sm">
+                Sign In
+              </Button>
+            </Link>
+            <Link to="/register">
+              <Button size="sm">
+                Get Started
+              </Button>
+            </Link>
+          </div>
+          <div className="text-slate-500 text-sm">
+            MVP Demo Version &copy; 2024 Workdate.dev
+          </div>
         </div>
       </div>
     </div>
