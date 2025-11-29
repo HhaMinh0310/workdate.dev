@@ -2,15 +2,56 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ChevronLeft, Laptop, MapPin, Clock, Heart } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
+import { addCoupleSession, CURRENT_USER, PARTNER_USER } from '../../services/mockData';
+import { CoupleSession } from '../../types';
 
 export const CoupleCreate: React.FC = () => {
   const navigate = useNavigate();
+  const [title, setTitle] = useState('');
+  const [startTime, setStartTime] = useState('');
+  const [duration, setDuration] = useState('1 Hour');
   const [mode, setMode] = useState<'online' | 'offline'>('online');
+  const [location, setLocation] = useState('');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // In a real app, this would post to the API.
-    // For MVP, we just navigate back to the dashboard.
+    if (!title.trim() || !startTime) {
+      alert('Please provide a title and a start time.');
+      return;
+    }
+
+    const startDate = new Date(startTime);
+    let endDate = new Date(startDate);
+    switch (duration) {
+      case '1 Hour':
+        endDate.setHours(startDate.getHours() + 1);
+        break;
+      case '2 Hours':
+        endDate.setHours(startDate.getHours() + 2);
+        break;
+      case '3 Hours':
+        endDate.setHours(startDate.getHours() + 3);
+        break;
+      case 'Until Done':
+        endDate.setHours(startDate.getHours() + 8); // A long session
+        break;
+      default:
+        endDate.setHours(startDate.getHours() + 1);
+    }
+
+    const newSession: CoupleSession = {
+      id: `cs_${Date.now()}`,
+      title,
+      startTime: startDate.toISOString(),
+      endTime: endDate.toISOString(),
+      mode,
+      location: mode === 'offline' ? location : undefined,
+      partners: [CURRENT_USER, PARTNER_USER],
+      tasks: [],
+      rewards: [],
+    };
+
+    addCoupleSession(newSession);
     navigate('/couple');
   };
 
@@ -43,17 +84,29 @@ export const CoupleCreate: React.FC = () => {
                   type="text" 
                   placeholder="e.g. Sunday Morning Code & Coffee" 
                   className="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-slate-200 focus:outline-none focus:border-secondary"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
                     <label className="block text-sm font-medium text-slate-300 mb-1">Start Time</label>
-                    <input type="datetime-local" className="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-slate-200 focus:outline-none focus:border-secondary" />
+                    <input 
+                      required
+                      type="datetime-local" 
+                      className="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-slate-200 focus:outline-none focus:border-secondary" 
+                      value={startTime}
+                      onChange={(e) => setStartTime(e.target.value)}
+                    />
                 </div>
                 <div>
                     <label className="block text-sm font-medium text-slate-300 mb-1">Duration</label>
-                    <select className="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-slate-200 focus:outline-none focus:border-secondary">
+                    <select 
+                      className="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-slate-200 focus:outline-none focus:border-secondary"
+                      value={duration}
+                      onChange={(e) => setDuration(e.target.value)}
+                    >
                         <option>1 Hour</option>
                         <option>2 Hours</option>
                         <option>3 Hours</option>
@@ -89,6 +142,8 @@ export const CoupleCreate: React.FC = () => {
                       type="text" 
                       placeholder="e.g. The Library Cafe, Living Room" 
                       className="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-slate-200 focus:outline-none focus:border-secondary"
+                      value={location}
+                      onChange={(e) => setLocation(e.target.value)}
                     />
                   </div>
               )}

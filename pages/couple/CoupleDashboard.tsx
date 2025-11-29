@@ -18,54 +18,65 @@ export const CoupleDashboard: React.FC = () => {
       </div>
 
       <div className="space-y-4">
-        {MOCK_COUPLE_SESSIONS.map((session) => (
-          <Link to={`/couple/session/${session.id}`} key={session.id} className="block group">
-            <div className="bg-surface border border-slate-700 rounded-xl p-6 hover:border-secondary transition-colors">
-              <div className="flex justify-between items-start">
-                <div>
-                  <h3 className="text-xl font-semibold text-white group-hover:text-secondary transition-colors">
-                    {session.title}
-                  </h3>
-                  <div className="flex items-center gap-4 mt-2 text-slate-400 text-sm">
-                    <div className="flex items-center gap-1">
-                      <Calendar size={14} />
-                      <span>Today</span>
+        {MOCK_COUPLE_SESSIONS.map((session) => {
+          const sessionDate = new Date(session.startTime);
+          const formattedDateTime = new Intl.DateTimeFormat('en-US', {
+              month: 'short',
+              day: 'numeric',
+              hour: 'numeric',
+              minute: '2-digit',
+              hour12: true,
+          }).format(sessionDate);
+
+          return (
+            <Link to={`/couple/session/${session.id}`} key={session.id} className="block group">
+              <div className="bg-surface border border-slate-700 rounded-xl p-6 hover:border-secondary transition-colors">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <h3 className="text-xl font-semibold text-white group-hover:text-secondary transition-colors">
+                      {session.title}
+                    </h3>
+                    <div className="flex items-center gap-4 mt-2 text-slate-400 text-sm">
+                      <div className="flex items-center gap-1">
+                        <Calendar size={14} />
+                        <span>{formattedDateTime}</span>
+                      </div>
+                      {session.mode === 'offline' ? (
+                         <div className="flex items-center gap-1 text-slate-300">
+                            <MapPin size={14} />
+                            <span>{session.location || 'Offline'}</span>
+                         </div>
+                      ) : (
+                         <div className="flex items-center gap-1 text-slate-300">
+                            <Laptop size={14} />
+                            <span>Online</span>
+                         </div>
+                      )}
                     </div>
-                    {session.mode === 'offline' ? (
-                       <div className="flex items-center gap-1 text-slate-300">
-                          <MapPin size={14} />
-                          <span>{session.location || 'Offline'}</span>
-                       </div>
-                    ) : (
-                       <div className="flex items-center gap-1 text-slate-300">
-                          <Laptop size={14} />
-                          <span>Online</span>
-                       </div>
-                    )}
+                  </div>
+                  <div className="flex -space-x-3">
+                      {session.partners.map(p => (
+                          <img 
+                              key={p.id}
+                              src={p.avatarUrl} 
+                              alt={p.displayName} 
+                              className="w-10 h-10 rounded-full border-2 border-surface object-cover"
+                          />
+                      ))}
                   </div>
                 </div>
-                <div className="flex -space-x-3">
-                    {session.partners.map(p => (
-                        <img 
-                            key={p.id}
-                            src={p.avatarUrl} 
-                            alt={p.displayName} 
-                            className="w-10 h-10 rounded-full border-2 border-surface object-cover"
-                        />
-                    ))}
+                <div className="mt-4 pt-4 border-t border-slate-700 flex justify-between items-center">
+                   <div className="text-sm text-slate-400">
+                      <span className="text-white font-medium">{session.tasks.filter(t => t.done).length}</span> tasks completed total
+                   </div>
+                   <span className="text-secondary font-medium text-sm flex items-center">
+                      Join Room <ArrowRight size={14} className="ml-1" />
+                   </span>
                 </div>
               </div>
-              <div className="mt-4 pt-4 border-t border-slate-700 flex justify-between items-center">
-                 <div className="text-sm text-slate-400">
-                    <span className="text-white font-medium">{session.tasks.filter(t => t.done).length}</span> tasks completed total
-                 </div>
-                 <span className="text-secondary font-medium text-sm flex items-center">
-                    Join Room <ArrowRight size={14} className="ml-1" />
-                 </span>
-              </div>
-            </div>
-          </Link>
-        ))}
+            </Link>
+          )
+        })}
 
         {MOCK_COUPLE_SESSIONS.length === 0 && (
             <div className="text-center py-12 bg-surface/50 rounded-xl border border-dashed border-slate-700">

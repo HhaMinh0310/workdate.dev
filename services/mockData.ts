@@ -14,7 +14,8 @@ export const PARTNER_USER: User = {
   status: 'focus',
 };
 
-export const MOCK_COUPLE_SESSIONS: CoupleSession[] = [
+// Changed from const to let to allow adding new sessions for the demo
+export let MOCK_COUPLE_SESSIONS: CoupleSession[] = [
   {
     id: 'cs1',
     title: 'Sunday Deep Work Date',
@@ -34,6 +35,12 @@ export const MOCK_COUPLE_SESSIONS: CoupleSession[] = [
     ],
   },
 ];
+
+// Function to add a new session to the mock data array
+export const addCoupleSession = (session: CoupleSession) => {
+  MOCK_COUPLE_SESSIONS.unshift(session); // unshift adds the new session to the beginning of the array
+};
+
 
 export const MOCK_SOLO_SESSIONS: SoloSession[] = [
   {
