@@ -17,31 +17,44 @@ export const CoupleDashboard: React.FC = () => {
 
   useEffect(() => {
     if (!user) {
+      console.log('❌ No user found');
       setLoading(false);
       return;
     }
 
     const loadData = async () => {
+      console.log('🔄 Loading data for user:', user.id);
+      
       try {
         // First, get partnership
         const partnerships = await partnershipService.getPartnerships(user.id);
+        console.log('📋 Partnerships loaded:', partnerships);
         
         if (partnerships && partnerships.length > 0) {
           const partnership = partnerships[0];
+          console.log('✅ Using partnership:', partnership);
           setPartnershipId(partnership.id);
           
           // Determine partner
-          const partnerData = partnership.user1.id === user.id 
+          const partnerData = partnership.user1?.id === user.id 
             ? partnership.user2 
             : partnership.user1;
+          console.log('👥 Partner:', partnerData);
           setPartner(partnerData);
 
           // Load sessions for this partnership
-          const sessionsData = await coupleSessionService.getCoupleSessions(partnership.id);
-          setSessions(sessionsData || []);
+          try {
+            const sessionsData = await coupleSessionService.getCoupleSessions(partnership.id);
+            console.log('📅 Sessions loaded:', sessionsData);
+            setSessions(sessionsData || []);
+          } catch (sessionErr) {
+            console.error('Failed to load sessions:', sessionErr);
+          }
+        } else {
+          console.log('⚠️ No partnerships found for this user');
         }
       } catch (err: any) {
-        console.error('Failed to load data:', err);
+        console.error('❌ Failed to load data:', err);
       } finally {
         setLoading(false);
       }

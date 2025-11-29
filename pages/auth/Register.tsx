@@ -48,22 +48,25 @@ export const Register: React.FC = () => {
     try {
       const result = await signUp(email, password, displayName);
       
-      // If there's an invite, create partnership
+      // If there's an invite, create partnership after a short delay
+      // (to ensure profile trigger has completed)
       if (inviteUserId && result?.user) {
+        // Wait for profile to be created by trigger
+        await new Promise(resolve => setTimeout(resolve, 1500));
+        
         try {
           await partnershipService.createPartnership(inviteUserId, result.user.id);
+          navigate('/couple');
+          return;
         } catch (partnerErr: any) {
           console.error('Failed to create partnership:', partnerErr);
-          // Don't fail registration if partnership creation fails
+          // Store invite in localStorage to retry later
+          localStorage.setItem('pending_partner_invite', inviteUserId);
         }
       }
       
-      // After successful registration, redirect to appropriate page
-      if (inviteUserId) {
-        navigate('/couple');
-      } else {
-        navigate('/');
-      }
+      // After successful registration, redirect to home
+      navigate('/');
     } catch (err: any) {
       setError(err.message || 'Failed to sign up');
     } finally {

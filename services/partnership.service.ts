@@ -2,6 +2,8 @@ import { supabase } from './supabase';
 
 export const partnershipService = {
   async getPartnerships(userId: string) {
+    console.log('🔍 Getting partnerships for user:', userId);
+    
     const { data, error } = await supabase
       .from('partnerships')
       .select(`
@@ -9,10 +11,20 @@ export const partnershipService = {
         user1:profiles!partnerships_user1_id_fkey(id, display_name, avatar_url, status),
         user2:profiles!partnerships_user2_id_fkey(id, display_name, avatar_url, status)
       `)
-      .or(`user1_id.eq.${userId},user2_id.eq.${userId}`)
-      .eq('status', 'active');
-    if (error) throw error;
-    return data;
+      .or(`user1_id.eq.${userId},user2_id.eq.${userId}`);
+    
+    console.log('📦 Partnerships result:', { data, error });
+    
+    if (error) {
+      console.error('❌ Partnership error:', error);
+      throw error;
+    }
+    
+    // Filter active partnerships in JS (in case RLS causes issues)
+    const activePartnerships = data?.filter(p => p.status === 'active') || [];
+    console.log('✅ Active partnerships:', activePartnerships);
+    
+    return activePartnerships;
   },
 
   async getPartnershipById(partnershipId: string) {
