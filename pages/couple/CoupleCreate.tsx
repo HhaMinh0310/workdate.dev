@@ -1,16 +1,31 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ChevronLeft, Laptop, MapPin, Clock, Heart, UserPlus, Copy, Check } from 'lucide-react';
+import { ChevronLeft, Laptop, MapPin, Clock, Heart, UserPlus, Copy, Check, Calendar } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import { useAuth } from '../../contexts/AuthContext';
 import { coupleSessionService } from '../../services/coupleSession.service';
 import { partnershipService } from '../../services/partnership.service';
 
+// Helper to get default datetime (next hour from now)
+const getDefaultDateTime = () => {
+  const now = new Date();
+  now.setHours(now.getHours() + 1);
+  now.setMinutes(0);
+  now.setSeconds(0);
+  // Format: YYYY-MM-DDTHH:MM
+  return now.toISOString().slice(0, 16);
+};
+
+// Helper to get min datetime (now)
+const getMinDateTime = () => {
+  return new Date().toISOString().slice(0, 16);
+};
+
 export const CoupleCreate: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [title, setTitle] = useState('');
-  const [startTime, setStartTime] = useState('');
+  const [startTime, setStartTime] = useState(getDefaultDateTime());
   const [duration, setDuration] = useState('1 Hour');
   const [mode, setMode] = useState<'online' | 'offline'>('online');
   const [location, setLocation] = useState('');
@@ -250,17 +265,21 @@ export const CoupleCreate: React.FC = () => {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                    <label className="block text-sm font-medium text-slate-300 mb-1">Start Time</label>
-                    <input 
-                      required
-                      type="datetime-local" 
-                      className="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-slate-200 focus:outline-none focus:border-secondary" 
-                      value={startTime}
-                      onChange={(e) => setStartTime(e.target.value)}
-                    />
+                    <label className="block text-sm font-medium text-slate-300 mb-1">Thời gian bắt đầu</label>
+                    <div className="relative">
+                      <input 
+                        required
+                        type="datetime-local"
+                        min={getMinDateTime()}
+                        className="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 pr-10 text-slate-200 focus:outline-none focus:border-secondary cursor-pointer [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:right-0 [&::-webkit-calendar-picker-indicator]:w-full [&::-webkit-calendar-picker-indicator]:h-full [&::-webkit-calendar-picker-indicator]:cursor-pointer"
+                        value={startTime}
+                        onChange={(e) => setStartTime(e.target.value)}
+                      />
+                      <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 pointer-events-none" />
+                    </div>
                 </div>
                 <div>
-                    <label className="block text-sm font-medium text-slate-300 mb-1">Duration</label>
+                    <label className="block text-sm font-medium text-slate-300 mb-1">Thời lượng</label>
                     <select 
                       className="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-slate-200 focus:outline-none focus:border-secondary"
                       value={duration}

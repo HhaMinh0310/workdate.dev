@@ -1,17 +1,31 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ChevronLeft, Laptop, MapPin, Code, User, Clock } from 'lucide-react';
+import { ChevronLeft, Laptop, MapPin, Code, User, Clock, Calendar } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import { useAuth } from '../../contexts/AuthContext';
 import { soloSessionService } from '../../services/soloSession.service';
+
+// Helper to get today's date in YYYY-MM-DD format
+const getTodayDate = () => {
+  const today = new Date();
+  return today.toISOString().split('T')[0];
+};
+
+// Helper to get current time rounded to next hour
+const getDefaultTime = () => {
+  const now = new Date();
+  now.setHours(now.getHours() + 1);
+  now.setMinutes(0);
+  return `${now.getHours().toString().padStart(2, '0')}:00`;
+};
 
 export const SoloCreate: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [mode, setMode] = useState<'online' | 'offline'>('online');
   const [title, setTitle] = useState('');
-  const [date, setDate] = useState('');
-  const [startTime, setStartTime] = useState('');
+  const [date, setDate] = useState(getTodayDate());
+  const [startTime, setStartTime] = useState(getDefaultTime());
   const [duration, setDuration] = useState('1 Hour');
   const [location, setLocation] = useState('');
   const [techStack, setTechStack] = useState('');
@@ -128,24 +142,31 @@ export const SoloCreate: React.FC = () => {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                    <label className="block text-sm font-medium text-slate-300 mb-1">Date</label>
-                    <input 
-                      type="date" 
-                      required
-                      className="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-slate-200 focus:outline-none focus:border-primary"
-                      value={date}
-                      onChange={(e) => setDate(e.target.value)}
-                    />
+                    <label className="block text-sm font-medium text-slate-300 mb-1">Ngày</label>
+                    <div className="relative">
+                      <input 
+                        type="date" 
+                        required
+                        min={getTodayDate()}
+                        className="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 pr-10 text-slate-200 focus:outline-none focus:border-primary cursor-pointer [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:right-0 [&::-webkit-calendar-picker-indicator]:w-full [&::-webkit-calendar-picker-indicator]:h-full [&::-webkit-calendar-picker-indicator]:cursor-pointer"
+                        value={date}
+                        onChange={(e) => setDate(e.target.value)}
+                      />
+                      <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 pointer-events-none" />
+                    </div>
                 </div>
                 <div>
-                    <label className="block text-sm font-medium text-slate-300 mb-1">Start Time</label>
-                    <input 
-                      type="time" 
-                      required
-                      className="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-slate-200 focus:outline-none focus:border-primary"
-                      value={startTime}
-                      onChange={(e) => setStartTime(e.target.value)}
-                    />
+                    <label className="block text-sm font-medium text-slate-300 mb-1">Giờ bắt đầu</label>
+                    <div className="relative">
+                      <input 
+                        type="time" 
+                        required
+                        className="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 pr-10 text-slate-200 focus:outline-none focus:border-primary cursor-pointer [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:right-0 [&::-webkit-calendar-picker-indicator]:w-full [&::-webkit-calendar-picker-indicator]:h-full [&::-webkit-calendar-picker-indicator]:cursor-pointer"
+                        value={startTime}
+                        onChange={(e) => setStartTime(e.target.value)}
+                      />
+                      <Clock className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 pointer-events-none" />
+                    </div>
                 </div>
               </div>
 
