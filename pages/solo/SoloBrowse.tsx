@@ -1,20 +1,48 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MOCK_SOLO_SESSIONS } from '../../services/mockData';
+import { soloSessionService } from '../../services/soloSession.service';
+import { useAuth } from '../../contexts/AuthContext';
 import { Button } from '../../components/ui/Button';
 import { X, MapPin, Laptop, Briefcase, ChevronLeft, Clock, Calendar, CheckCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { SoloSession } from '../../types';
 
 export const SoloBrowse: React.FC = () => {
+  const { user } = useAuth();
+  const [sessions, setSessions] = useState<SoloSession[]>([]);
+  const [loading, setLoading] = useState(true);
   const [selectedSession, setSelectedSession] = useState<SoloSession | null>(null);
   const [requestStatus, setRequestStatus] = useState<'idle' | 'sending' | 'sent'>('idle');
 
-  const handleRequest = () => {
+  useEffect(() => {
+    const loadSessions = async () => {
+      try {
+        const data = await soloSessionService.getSoloSessions({ status: 'open' });
+        setSessions(data);
+      } catch (err: any) {
+        console.error('Failed to load sessions:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadSessions();
+  }, []);
+
+  const handleRequest = async () => {
+    if (!selectedSession || !user) {
+      alert('Please log in to request a workdate');
+      return;
+    }
+
     setRequestStatus('sending');
-    setTimeout(() => {
-        setRequestStatus('sent');
-    }, 1000);
+    try {
+      await soloSessionService.requestWorkdate(selectedSession.id, user.id);
+      setRequestStatus('sent');
+    } catch (err: any) {
+      alert('Failed to send request: ' + err.message);
+      setRequestStatus('idle');
+    }
   };
 
   const closeModal = () => {
@@ -47,8 +75,11 @@ export const SoloBrowse: React.FC = () => {
 
        {/* Grid Content */}
        <div className="flex-1 p-4 md:p-6 max-w-6xl mx-auto w-full">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {MOCK_SOLO_SESSIONS.map((session) => (
+            {loading ? (
+              <div className="text-center text-slate-400 py-12">Loading sessions...</div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {sessions.map((session) => (
                     <motion.div 
                         key={session.id}
                         layoutId={`card-${session.id}`}
@@ -101,7 +132,13 @@ export const SoloBrowse: React.FC = () => {
                         </div>
                     </motion.div>
                 ))}
-            </div>
+              </div>
+            )}
+            {!loading && sessions.length === 0 && (
+              <div className="text-center text-slate-400 py-12">
+                No sessions available. Be the first to create one!
+              </div>
+            )}
        </div>
 
       {/* Detail Modal */}

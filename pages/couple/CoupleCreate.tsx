@@ -2,57 +2,80 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ChevronLeft, Laptop, MapPin, Clock, Heart } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
-import { addCoupleSession, CURRENT_USER, PARTNER_USER } from '../../services/mockData';
-import { CoupleSession } from '../../types';
+import { useAuth } from '../../contexts/AuthContext';
+import { coupleSessionService } from '../../services/coupleSession.service';
 
 export const CoupleCreate: React.FC = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [title, setTitle] = useState('');
   const [startTime, setStartTime] = useState('');
   const [duration, setDuration] = useState('1 Hour');
   const [mode, setMode] = useState<'online' | 'offline'>('online');
   const [location, setLocation] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim() || !startTime) {
-      alert('Please provide a title and a start time.');
+      setError('Please provide a title and a start time.');
       return;
     }
 
-    const startDate = new Date(startTime);
-    let endDate = new Date(startDate);
-    switch (duration) {
-      case '1 Hour':
-        endDate.setHours(startDate.getHours() + 1);
-        break;
-      case '2 Hours':
-        endDate.setHours(startDate.getHours() + 2);
-        break;
-      case '3 Hours':
-        endDate.setHours(startDate.getHours() + 3);
-        break;
-      case 'Until Done':
-        endDate.setHours(startDate.getHours() + 8); // A long session
-        break;
-      default:
-        endDate.setHours(startDate.getHours() + 1);
+    if (!user) {
+      setError('You must be logged in to create a session.');
+      return;
     }
 
-    const newSession: CoupleSession = {
-      id: `cs_${Date.now()}`,
-      title,
-      startTime: startDate.toISOString(),
-      endTime: endDate.toISOString(),
-      mode,
-      location: mode === 'offline' ? location : undefined,
-      partners: [CURRENT_USER, PARTNER_USER],
-      tasks: [],
-      rewards: [],
-    };
+    setLoading(true);
+    setError(null);
 
-    addCoupleSession(newSession);
-    navigate('/couple');
+    try {
+      const startDate = new Date(startTime);
+      let endDate = new Date(startDate);
+      switch (duration) {
+        case '1 Hour':
+          endDate.setHours(startDate.getHours() + 1);
+          break;
+        case '2 Hours':
+          endDate.setHours(startDate.getHours() + 2);
+          break;
+        case '3 Hours':
+          endDate.setHours(startDate.getHours() + 3);
+          break;
+        case 'Until Done':
+          endDate.setHours(startDate.getHours() + 8);
+          break;
+        default:
+          endDate.setHours(startDate.getHours() + 1);
+      }
+
+      // TODO: Get partnership_id - you'll need to implement partnership lookup
+      // For now, this will fail without a partnership_id
+      const partnershipId = ''; // This needs to be retrieved from user's partnerships
+      
+      if (!partnershipId) {
+        setError('No partnership found. Please create a partnership first.');
+        setLoading(false);
+        return;
+      }
+
+      await coupleSessionService.createCoupleSession({
+        partnership_id: partnershipId,
+        title,
+        start_time: startDate.toISOString(),
+        end_time: endDate.toISOString(),
+        mode,
+        location: mode === 'offline' ? location : undefined,
+      });
+
+      navigate('/couple');
+    } catch (err: any) {
+      setError(err.message || 'Failed to create session');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -69,6 +92,12 @@ export const CoupleCreate: React.FC = () => {
             </h1>
             <p className="text-slate-400">Schedule a productive session with your partner.</p>
           </div>
+
+          {error && (
+            <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded-lg text-red-400 text-sm">
+              {error}
+            </div>
+          )}
 
           <form onSubmit={handleSubmit} className="space-y-8">
             {/* 1. Basics */}
@@ -150,7 +179,15 @@ export const CoupleCreate: React.FC = () => {
             </section>
 
             <div className="pt-6">
-                <Button type="submit" variant="secondary" className="w-full font-bold text-lg" size="lg">Schedule Date</Button>
+                <Button 
+                  type="submit" 
+                  variant="secondary" 
+                  className="w-full font-bold text-lg" 
+                  size="lg"
+                  disabled={loading}
+                >
+                  {loading ? 'Creating...' : 'Schedule Date'}
+                </Button>
             </div>
 
           </form>

@@ -1,9 +1,59 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Calendar, Clock, Plus, ArrowRight, MapPin, Laptop } from 'lucide-react';
-import { MOCK_COUPLE_SESSIONS } from '../../services/mockData';
+import { useAuth } from '../../contexts/AuthContext';
+import { coupleSessionService } from '../../services/coupleSession.service';
+import { CoupleSession } from '../../types';
 
 export const CoupleDashboard: React.FC = () => {
+  const { user } = useAuth();
+  const [sessions, setSessions] = useState<CoupleSession[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!user) {
+      setLoading(false);
+      return;
+    }
+
+    // TODO: Get partnership_id from user's partnerships
+    // For now, we'll need to handle this - you may need to create a partnership first
+    // This is a placeholder - you'll need to implement partnership lookup
+    const loadSessions = async () => {
+      try {
+        // This assumes you have a way to get the partnership_id
+        // You might need to create a partnership service or get it from user context
+        // For MVP, you could hardcode a partnership_id or create one on first login
+        setError('Partnership not set up. Please create a partnership first.');
+        setLoading(false);
+      } catch (err: any) {
+        setError(err.message);
+        setLoading(false);
+      }
+    };
+
+    loadSessions();
+  }, [user]);
+
+  if (loading) {
+    return (
+      <div className="p-6 max-w-4xl mx-auto">
+        <div className="text-center text-slate-400">Loading sessions...</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="p-6 max-w-4xl mx-auto">
+        <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-4 text-red-400">
+          {error}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="p-6 max-w-4xl mx-auto animate-fade-in">
       <div className="flex justify-between items-center mb-8">
@@ -18,7 +68,7 @@ export const CoupleDashboard: React.FC = () => {
       </div>
 
       <div className="space-y-4">
-        {MOCK_COUPLE_SESSIONS.map((session) => {
+        {sessions.map((session) => {
           const sessionDate = new Date(session.startTime);
           const formattedDateTime = new Intl.DateTimeFormat('en-US', {
               month: 'short',
@@ -78,7 +128,7 @@ export const CoupleDashboard: React.FC = () => {
           )
         })}
 
-        {MOCK_COUPLE_SESSIONS.length === 0 && (
+        {sessions.length === 0 && (
             <div className="text-center py-12 bg-surface/50 rounded-xl border border-dashed border-slate-700">
                 <p className="text-slate-400 mb-4">No scheduled sessions.</p>
                 <Link to="/couple/create" className="text-primary hover:underline">Create your first date</Link>

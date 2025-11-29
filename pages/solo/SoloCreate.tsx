@@ -2,15 +2,90 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ChevronLeft, Laptop, MapPin, Code, User, Clock } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
+import { useAuth } from '../../contexts/AuthContext';
+import { soloSessionService } from '../../services/soloSession.service';
 
 export const SoloCreate: React.FC = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [mode, setMode] = useState<'online' | 'offline'>('online');
+  const [title, setTitle] = useState('');
+  const [date, setDate] = useState('');
+  const [startTime, setStartTime] = useState('');
+  const [duration, setDuration] = useState('1 Hour');
+  const [location, setLocation] = useState('');
+  const [techStack, setTechStack] = useState('');
+  const [description, setDescription] = useState('');
+  const [level, setLevel] = useState('Anyone');
+  const [vibe, setVibe] = useState('Silent Work');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // API logic here
-    navigate('/solo/browse');
+    
+    if (!user) {
+      setError('Please log in to create a session');
+      return;
+    }
+
+    if (!title.trim() || !date || !startTime) {
+      setError('Please fill in all required fields');
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      // Calculate end time from duration
+      const [hours, minutes] = startTime.split(':').map(Number);
+      let endHours = hours;
+      switch (duration) {
+        case '1 Hour':
+          endHours = hours + 1;
+          break;
+        case '2 Hours':
+          endHours = hours + 2;
+          break;
+        case '3 Hours':
+          endHours = hours + 3;
+          break;
+        case 'Half Day':
+          endHours = hours + 4;
+          break;
+      }
+      const endTime = `${endHours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+
+      // Parse tech stack
+      const techStackArray = techStack.split(',').map(t => t.trim()).filter(t => t);
+
+      // Parse vibe to array
+      const vibeArray = [vibe];
+
+      await soloSessionService.createSoloSession({
+        host_user_id: user.id,
+        title: title.trim(),
+        date,
+        start_time: startTime,
+        end_time: endTime,
+        mode,
+        location: mode === 'offline' ? location : undefined,
+        description: description.trim(),
+        tech_stack: techStackArray,
+        partner_prefs: {
+          level,
+          role: [], // You can add role selection later
+          vibe: vibeArray
+        }
+      });
+
+      navigate('/solo/browse');
+    } catch (err: any) {
+      setError(err.message || 'Failed to create session');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -26,6 +101,12 @@ export const SoloCreate: React.FC = () => {
             <p className="text-slate-400">Create a session listing for other developers to find.</p>
           </div>
 
+          {error && (
+            <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded-lg text-red-400 text-sm">
+              {error}
+            </div>
+          )}
+
           <form onSubmit={handleSubmit} className="space-y-8">
             {/* 1. Basics */}
             <section className="space-y-4">
@@ -40,24 +121,47 @@ export const SoloCreate: React.FC = () => {
                   type="text" 
                   placeholder="e.g. Late Night Rust Debugging" 
                   className="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-slate-200 focus:outline-none focus:border-primary"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                    <label className="block text-sm font-medium text-slate-300 mb-1">Start Time</label>
-                    <input type="time" className="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-slate-200 focus:outline-none focus:border-primary" />
+                    <label className="block text-sm font-medium text-slate-300 mb-1">Date</label>
+                    <input 
+                      type="date" 
+                      required
+                      className="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-slate-200 focus:outline-none focus:border-primary"
+                      value={date}
+                      onChange={(e) => setDate(e.target.value)}
+                    />
                 </div>
                 <div>
+                    <label className="block text-sm font-medium text-slate-300 mb-1">Start Time</label>
+                    <input 
+                      type="time" 
+                      required
+                      className="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-slate-200 focus:outline-none focus:border-primary"
+                      value={startTime}
+                      onChange={(e) => setStartTime(e.target.value)}
+                    />
+                </div>
+              </div>
+
+              <div>
                     <label className="block text-sm font-medium text-slate-300 mb-1">Duration</label>
-                    <select className="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-slate-200 focus:outline-none focus:border-primary">
+                    <select 
+                      className="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-slate-200 focus:outline-none focus:border-primary"
+                      value={duration}
+                      onChange={(e) => setDuration(e.target.value)}
+                    >
                         <option>1 Hour</option>
                         <option>2 Hours</option>
                         <option>3 Hours</option>
                         <option>Half Day</option>
                     </select>
                 </div>
-              </div>
 
               <div>
                 <label className="block text-sm font-medium text-slate-300 mb-2">Mode</label>
@@ -86,6 +190,8 @@ export const SoloCreate: React.FC = () => {
                       type="text" 
                       placeholder="e.g. Starbucks, 3rd Ave" 
                       className="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-slate-200 focus:outline-none focus:border-primary"
+                      value={location}
+                      onChange={(e) => setLocation(e.target.value)}
                     />
                   </div>
               )}
@@ -102,6 +208,8 @@ export const SoloCreate: React.FC = () => {
                   type="text" 
                   placeholder="React, Node.js, TypeScript..." 
                   className="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-slate-200 focus:outline-none focus:border-primary"
+                  value={techStack}
+                  onChange={(e) => setTechStack(e.target.value)}
                 />
               </div>
               <div>
@@ -110,6 +218,8 @@ export const SoloCreate: React.FC = () => {
                   rows={3}
                   placeholder="I'm trying to finish a hackathon project. Need focus." 
                   className="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-slate-200 focus:outline-none focus:border-primary resize-none"
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
                 />
               </div>
             </section>
@@ -122,7 +232,11 @@ export const SoloCreate: React.FC = () => {
                <div className="grid grid-cols-2 gap-4">
                     <div>
                         <label className="block text-sm font-medium text-slate-300 mb-1">Level</label>
-                        <select className="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-slate-200 focus:outline-none focus:border-primary">
+                        <select 
+                          className="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-slate-200 focus:outline-none focus:border-primary"
+                          value={level}
+                          onChange={(e) => setLevel(e.target.value)}
+                        >
                             <option>Anyone</option>
                             <option>Student</option>
                             <option>Junior</option>
@@ -132,7 +246,11 @@ export const SoloCreate: React.FC = () => {
                     </div>
                     <div>
                          <label className="block text-sm font-medium text-slate-300 mb-1">Vibe</label>
-                        <select className="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-slate-200 focus:outline-none focus:border-primary">
+                        <select 
+                          className="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-slate-200 focus:outline-none focus:border-primary"
+                          value={vibe}
+                          onChange={(e) => setVibe(e.target.value)}
+                        >
                             <option>Silent Work</option>
                             <option>Chatty / Social</option>
                             <option>Pomodoro Style</option>
@@ -142,7 +260,14 @@ export const SoloCreate: React.FC = () => {
             </section>
 
             <div className="pt-6">
-                <Button type="submit" className="w-full font-bold text-lg" size="lg">Create Workdate</Button>
+                <Button 
+                  type="submit" 
+                  className="w-full font-bold text-lg" 
+                  size="lg"
+                  disabled={loading}
+                >
+                  {loading ? 'Creating...' : 'Create Workdate'}
+                </Button>
             </div>
 
           </form>

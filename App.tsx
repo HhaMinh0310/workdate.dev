@@ -1,11 +1,14 @@
 import React from 'react';
 import { HashRouter as Router, Routes, Route, Link } from 'react-router-dom';
+import { AuthProvider } from './contexts/AuthContext';
 import { Landing } from './pages/Landing';
 import { CoupleDashboard } from './pages/couple/CoupleDashboard';
 import { CoupleSessionRoom } from './pages/couple/CoupleSession';
 import { CoupleCreate } from './pages/couple/CoupleCreate';
 import { SoloCreate } from './pages/solo/SoloCreate';
 import { SoloBrowse } from './pages/solo/SoloBrowse';
+import { Login } from './pages/auth/Login';
+import { Register } from './pages/auth/Register';
 import { Heart, Users } from 'lucide-react';
 
 const SoloDashboard: React.FC = () => {
@@ -49,21 +52,27 @@ const SoloDashboard: React.FC = () => {
 
 const App: React.FC = () => {
   return (
-    <Router>
-      <Routes>
-        <Route path="/" element={<Landing />} />
-        
-        {/* Couple Routes */}
-        <Route path="/couple" element={<CoupleDashboard />} />
-        <Route path="/couple/create" element={<CoupleCreate />} />
-        <Route path="/couple/session/:id" element={<CoupleSessionRoom />} />
+    <AuthProvider>
+      <Router>
+        <Routes>
+          <Route path="/" element={<Landing />} />
+          
+          {/* Auth Routes */}
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          
+          {/* Couple Routes */}
+          <Route path="/couple" element={<CoupleDashboard />} />
+          <Route path="/couple/create" element={<CoupleCreate />} />
+          <Route path="/couple/session/:id" element={<CoupleSessionRoom />} />
 
-        {/* Solo Routes */}
-        <Route path="/solo" element={<SoloDashboard />} />
-        <Route path="/solo/create" element={<SoloCreate />} />
-        <Route path="/solo/browse" element={<SoloBrowse />} />
-      </Routes>
-    </Router>
+          {/* Solo Routes */}
+          <Route path="/solo" element={<SoloDashboard />} />
+          <Route path="/solo/create" element={<SoloCreate />} />
+          <Route path="/solo/browse" element={<SoloBrowse />} />
+        </Routes>
+      </Router>
+    </AuthProvider>
   );
 };
 

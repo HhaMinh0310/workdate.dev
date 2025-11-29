@@ -1,0 +1,12 @@
+# Git Configuration Template
+# Copy nội dung này vào file .git/config trong thư mục .git của repository
+# Hoặc sử dụng lệnh git config để cấu hình
+
+[user]
+    email = vinhhuong688@gmail.com
+    name = HhaMinh0310
+
+[remote "origin"]
+    url = https://github.com/HhaMinh0310/workdate.dev.git
+    fetch = +refs/heads/*:refs/remotes/origin/*
+
