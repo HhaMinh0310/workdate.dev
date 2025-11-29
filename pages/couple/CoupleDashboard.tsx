@@ -1,15 +1,19 @@
 import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
-import { Calendar, Clock, Plus, ArrowRight, MapPin, Laptop } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Calendar, Plus, ArrowRight, MapPin, Laptop, UserPlus, Heart } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { coupleSessionService } from '../../services/coupleSession.service';
+import { partnershipService } from '../../services/partnership.service';
 import { CoupleSession } from '../../types';
+import { Button } from '../../components/ui/Button';
 
 export const CoupleDashboard: React.FC = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [sessions, setSessions] = useState<CoupleSession[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [partnershipId, setPartnershipId] = useState<string | null>(null);
+  const [partner, setPartner] = useState<any>(null);
 
   useEffect(() => {
     if (!user) {
@@ -17,38 +21,85 @@ export const CoupleDashboard: React.FC = () => {
       return;
     }
 
-    // TODO: Get partnership_id from user's partnerships
-    // For now, we'll need to handle this - you may need to create a partnership first
-    // This is a placeholder - you'll need to implement partnership lookup
-    const loadSessions = async () => {
+    const loadData = async () => {
       try {
-        // This assumes you have a way to get the partnership_id
-        // You might need to create a partnership service or get it from user context
-        // For MVP, you could hardcode a partnership_id or create one on first login
-        setError('Partnership not set up. Please create a partnership first.');
-        setLoading(false);
+        // First, get partnership
+        const partnerships = await partnershipService.getPartnerships(user.id);
+        
+        if (partnerships && partnerships.length > 0) {
+          const partnership = partnerships[0];
+          setPartnershipId(partnership.id);
+          
+          // Determine partner
+          const partnerData = partnership.user1.id === user.id 
+            ? partnership.user2 
+            : partnership.user1;
+          setPartner(partnerData);
+
+          // Load sessions for this partnership
+          const sessionsData = await coupleSessionService.getCoupleSessions(partnership.id);
+          setSessions(sessionsData || []);
+        }
       } catch (err: any) {
-        setError(err.message);
+        console.error('Failed to load data:', err);
+      } finally {
         setLoading(false);
       }
     };
 
-    loadSessions();
+    loadData();
   }, [user]);
 
   if (loading) {
     return (
-      <div className="p-6 max-w-4xl mx-auto">
-        <div className="text-center text-slate-400">Loading sessions...</div>
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-secondary"></div>
       </div>
     );
   }
 
-  if (error) {
+  // No partnership - show invite UI
+  if (!partnershipId) {
     return (
-      <div className="p-6 max-w-4xl mx-auto">
-        <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-4 text-red-400">
-          {error}
+      <div className="p-6 max-w-4xl mx-auto animate-fade-in">
+        <div className="mb-8">
+          <h1 className="text-2xl font-bold text-white">Couple Mode</h1>
+          <p className="text-slate-400">Work sessions with your partner</p>
+        </div>
+
+        <div className="bg-surface border border-slate-700 rounded-2xl p-8 text-center">
+          <div className="w-20 h-20 bg-secondary/20 rounded-full flex items-center justify-center mx-auto mb-6">
+            <Heart className="w-10 h-10 text-secondary" />
+          </div>
+          <h2 className="text-2xl font-bold text-white mb-3">Find Your Partner</h2>
+          <p className="text-slate-400 mb-8 max-w-md mx-auto">
+            Couple Mode lets you and your partner track work sessions together, 
+            set tasks, and reward each other for productivity!
+          </p>
+
+          <div className="grid md:grid-cols-2 gap-4 max-w-lg mx-auto">
+            <Button
+              variant="secondary"
+              size="lg"
+              className="w-full"
+              onClick={() => navigate('/couple/create')}
+            >
+              <UserPlus size={18} className="mr-2" />
+              Invite Partner
+            </Button>
+            <Button
+              variant="primary"
+              size="lg"
+              className="w-full"
+              onClick={() => navigate('/solo/browse')}
+            >
+              Find Partner in Solo Mode
+            </Button>
+          </div>
+
+          <p className="mt-6 text-sm text-slate-500">
+            Don't have a partner yet? Browse Solo Mode to find someone to work with!
+          </p>
         </div>
       </div>
     );
@@ -59,13 +110,31 @@ export const CoupleDashboard: React.FC = () => {
       <div className="flex justify-between items-center mb-8">
         <div>
           <h1 className="text-2xl font-bold text-white">Couple Dashboard</h1>
-          <p className="text-slate-400">Your shared work sessions</p>
+          <p className="text-slate-400">
+            Working with {partner?.display_name || 'your partner'}
+          </p>
         </div>
-        <Link to="/couple/create" className="flex items-center gap-2 bg-surface hover:bg-slate-700 text-slate-200 px-4 py-2 rounded-lg border border-slate-700 transition-colors">
+        <Link to="/couple/create" className="flex items-center gap-2 bg-secondary text-white px-4 py-2 rounded-lg hover:bg-secondary/80 transition-colors">
           <Plus size={18} />
-          <span>New Session</span>
+          <span>New Date</span>
         </Link>
       </div>
+
+      {/* Partner card */}
+      {partner && (
+        <div className="bg-gradient-to-r from-secondary/20 to-primary/20 border border-secondary/30 rounded-xl p-4 mb-6">
+          <div className="flex items-center gap-4">
+            <div className="w-14 h-14 rounded-full bg-secondary/30 flex items-center justify-center text-secondary text-xl font-bold">
+              {partner.display_name?.[0]?.toUpperCase() || 'P'}
+            </div>
+            <div>
+              <p className="text-sm text-slate-400">Your Partner</p>
+              <p className="text-xl font-semibold text-white">{partner.display_name}</p>
+              <p className="text-xs text-slate-500 capitalize">{partner.status || 'offline'}</p>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="space-y-4">
         {sessions.map((session) => {
@@ -105,19 +174,19 @@ export const CoupleDashboard: React.FC = () => {
                     </div>
                   </div>
                   <div className="flex -space-x-3">
-                      {session.partners.map(p => (
-                          <img 
+                      {session.partners?.map(p => (
+                          <div 
                               key={p.id}
-                              src={p.avatarUrl} 
-                              alt={p.displayName} 
-                              className="w-10 h-10 rounded-full border-2 border-surface object-cover"
-                          />
+                              className="w-10 h-10 rounded-full border-2 border-surface bg-primary/30 flex items-center justify-center text-primary font-medium"
+                          >
+                            {p.displayName?.[0]?.toUpperCase() || '?'}
+                          </div>
                       ))}
                   </div>
                 </div>
                 <div className="mt-4 pt-4 border-t border-slate-700 flex justify-between items-center">
                    <div className="text-sm text-slate-400">
-                      <span className="text-white font-medium">{session.tasks.filter(t => t.done).length}</span> tasks completed total
+                      <span className="text-white font-medium">{session.tasks?.filter(t => t.done).length || 0}</span> tasks completed
                    </div>
                    <span className="text-secondary font-medium text-sm flex items-center">
                       Join Room <ArrowRight size={14} className="ml-1" />
@@ -130,8 +199,11 @@ export const CoupleDashboard: React.FC = () => {
 
         {sessions.length === 0 && (
             <div className="text-center py-12 bg-surface/50 rounded-xl border border-dashed border-slate-700">
-                <p className="text-slate-400 mb-4">No scheduled sessions.</p>
-                <Link to="/couple/create" className="text-primary hover:underline">Create your first date</Link>
+                <Heart className="w-12 h-12 text-secondary/50 mx-auto mb-4" />
+                <p className="text-slate-400 mb-4">No scheduled sessions yet.</p>
+                <Link to="/couple/create" className="text-secondary hover:underline font-medium">
+                  Plan your first date →
+                </Link>
             </div>
         )}
       </div>

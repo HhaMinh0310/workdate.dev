@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ChevronLeft, Laptop, MapPin, Clock, Heart } from 'lucide-react';
+import { ChevronLeft, Laptop, MapPin, Clock, Heart, UserPlus, Copy, Check } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import { useAuth } from '../../contexts/AuthContext';
 import { coupleSessionService } from '../../services/coupleSession.service';
+import { partnershipService } from '../../services/partnership.service';
 
 export const CoupleCreate: React.FC = () => {
   const navigate = useNavigate();
@@ -14,7 +15,45 @@ export const CoupleCreate: React.FC = () => {
   const [mode, setMode] = useState<'online' | 'offline'>('online');
   const [location, setLocation] = useState('');
   const [loading, setLoading] = useState(false);
+  const [loadingPartnership, setLoadingPartnership] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [partnershipId, setPartnershipId] = useState<string | null>(null);
+  const [partner, setPartner] = useState<any>(null);
+  
+  // For creating partnership
+  const [showInvite, setShowInvite] = useState(false);
+  const [partnerEmail, setPartnerEmail] = useState('');
+  const [inviteLoading, setInviteLoading] = useState(false);
+  const [copied, setCopied] = useState(false);
+
+  // Load partnership on mount
+  useEffect(() => {
+    const loadPartnership = async () => {
+      if (!user) {
+        setLoadingPartnership(false);
+        return;
+      }
+
+      try {
+        const partnerships = await partnershipService.getPartnerships(user.id);
+        if (partnerships && partnerships.length > 0) {
+          const partnership = partnerships[0];
+          setPartnershipId(partnership.id);
+          // Determine who is the partner
+          const partnerData = partnership.user1.id === user.id 
+            ? partnership.user2 
+            : partnership.user1;
+          setPartner(partnerData);
+        }
+      } catch (err: any) {
+        console.error('Failed to load partnership:', err);
+      } finally {
+        setLoadingPartnership(false);
+      }
+    };
+
+    loadPartnership();
+  }, [user]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -25,6 +64,11 @@ export const CoupleCreate: React.FC = () => {
 
     if (!user) {
       setError('You must be logged in to create a session.');
+      return;
+    }
+
+    if (!partnershipId) {
+      setError('No partnership found. Please invite a partner first.');
       return;
     }
 
@@ -51,16 +95,6 @@ export const CoupleCreate: React.FC = () => {
           endDate.setHours(startDate.getHours() + 1);
       }
 
-      // TODO: Get partnership_id - you'll need to implement partnership lookup
-      // For now, this will fail without a partnership_id
-      const partnershipId = ''; // This needs to be retrieved from user's partnerships
-      
-      if (!partnershipId) {
-        setError('No partnership found. Please create a partnership first.');
-        setLoading(false);
-        return;
-      }
-
       await coupleSessionService.createCoupleSession({
         partnership_id: partnershipId,
         title,
@@ -78,6 +112,87 @@ export const CoupleCreate: React.FC = () => {
     }
   };
 
+  const copyInviteLink = () => {
+    const link = `${window.location.origin}/register?invite=${user?.id}`;
+    navigator.clipboard.writeText(link);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  // Show loading while checking partnership
+  if (loadingPartnership) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-secondary"></div>
+      </div>
+    );
+  }
+
+  // Show invite UI if no partnership
+  if (!partnershipId) {
+    return (
+      <div className="min-h-screen bg-background p-4 md:p-8">
+        <div className="max-w-2xl mx-auto">
+          <button onClick={() => navigate('/couple')} className="flex items-center text-slate-400 hover:text-white mb-6">
+            <ChevronLeft size={20} /> Back to dashboard
+          </button>
+
+          <div className="bg-surface border border-slate-700 rounded-2xl p-6 md:p-8">
+            <div className="text-center mb-8">
+              <div className="w-16 h-16 bg-secondary/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                <UserPlus className="w-8 h-8 text-secondary" />
+              </div>
+              <h1 className="text-2xl font-bold text-white mb-2">Find Your Partner</h1>
+              <p className="text-slate-400">
+                Couple Mode requires a partner. Invite someone to work together!
+              </p>
+            </div>
+
+            <div className="space-y-6">
+              {/* Option 1: Share invite link */}
+              <div className="p-4 bg-slate-900 rounded-xl">
+                <h3 className="font-medium text-white mb-2">Option 1: Share Invite Link</h3>
+                <p className="text-sm text-slate-400 mb-3">
+                  Send this link to your partner so they can sign up and connect with you.
+                </p>
+                <button
+                  onClick={copyInviteLink}
+                  className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-secondary/20 text-secondary rounded-lg hover:bg-secondary/30 transition-colors"
+                >
+                  {copied ? <Check size={18} /> : <Copy size={18} />}
+                  {copied ? 'Copied!' : 'Copy Invite Link'}
+                </button>
+              </div>
+
+              {/* Option 2: Use Solo Mode */}
+              <div className="p-4 bg-slate-900 rounded-xl">
+                <h3 className="font-medium text-white mb-2">Option 2: Try Solo Mode</h3>
+                <p className="text-sm text-slate-400 mb-3">
+                  Don't have a partner yet? Find one through Solo Mode!
+                </p>
+                <Button
+                  variant="primary"
+                  className="w-full"
+                  onClick={() => navigate('/solo/create')}
+                >
+                  Create Solo Session Instead
+                </Button>
+              </div>
+
+              {/* Info about how partnership works */}
+              <div className="text-center text-sm text-slate-500 mt-6">
+                <p>
+                  Once your partner signs up using your invite link, 
+                  you'll be automatically paired and can create couple sessions together.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background p-4 md:p-8">
       <div className="max-w-2xl mx-auto">
@@ -90,8 +205,23 @@ export const CoupleCreate: React.FC = () => {
             <h1 className="text-2xl font-bold text-white mb-2 flex items-center gap-2">
               <Heart className="text-secondary" /> Plan a Date
             </h1>
-            <p className="text-slate-400">Schedule a productive session with your partner.</p>
+            <p className="text-slate-400">
+              Schedule a productive session with {partner?.display_name || 'your partner'}.
+            </p>
           </div>
+
+          {/* Partner info */}
+          {partner && (
+            <div className="flex items-center gap-3 p-3 bg-secondary/10 rounded-lg mb-6">
+              <div className="w-10 h-10 rounded-full bg-secondary/30 flex items-center justify-center text-secondary font-medium">
+                {partner.display_name?.[0]?.toUpperCase() || 'P'}
+              </div>
+              <div>
+                <p className="text-sm text-slate-400">Partner</p>
+                <p className="text-white font-medium">{partner.display_name}</p>
+              </div>
+            </div>
+          )}
 
           {error && (
             <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded-lg text-red-400 text-sm">
