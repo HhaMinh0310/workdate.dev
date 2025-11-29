@@ -20,45 +20,61 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<SupabaseUser | null>(null);
   const [profile, setProfile] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [initialized, setInitialized] = useState(false);
 
   useEffect(() => {
-    // Check initial session
-    authService.getCurrentUser()
-      .then((currentUser) => {
-        setUser(currentUser);
-        if (currentUser) {
-          loadProfile(currentUser.id);
-        } else {
-          setLoading(false);
-        }
-      })
-      .catch((err) => {
-        console.error('Error getting current user:', err);
-        setLoading(false);
-      });
+    let isMounted = true;
+    let subscription: any = null;
 
-    // Listen for auth changes
-    try {
-      const { data: { subscription } } = supabase.auth.onAuthStateChange(
-        async (event, session) => {
-          if (session?.user) {
-            setUser(session.user);
-            await loadProfile(session.user.id);
-          } else {
-            setUser(null);
-            setProfile(null);
+    const initAuth = async () => {
+      try {
+        // Check initial session
+        const currentUser = await authService.getCurrentUser();
+        if (isMounted) {
+          setUser(currentUser);
+          if (currentUser) {
+            await loadProfile(currentUser.id);
           }
-          setLoading(false);
         }
-      );
+      } catch (err) {
+        console.error('Error getting current user:', err);
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+          setInitialized(true);
+        }
+      }
 
-      return () => {
+      // Listen for auth changes
+      try {
+        const { data } = supabase.auth.onAuthStateChange(
+          async (event, session) => {
+            if (!isMounted) return;
+            
+            if (session?.user) {
+              setUser(session.user);
+              await loadProfile(session.user.id);
+            } else {
+              setUser(null);
+              setProfile(null);
+            }
+            setLoading(false);
+          }
+        );
+        subscription = data?.subscription;
+      } catch (err) {
+        console.error('Error setting up auth listener:', err);
+      }
+    };
+
+    initAuth();
+
+    return () => {
+      isMounted = false;
+      if (subscription) {
         subscription.unsubscribe();
-      };
-    } catch (err) {
-      console.error('Error setting up auth listener:', err);
-      setLoading(false);
-    }
+      }
+    };
   }, []);
 
   const loadProfile = async (userId: string) => {

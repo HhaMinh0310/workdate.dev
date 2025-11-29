@@ -48,6 +48,13 @@ export const Login: React.FC = () => {
             </div>
           )}
 
+          {/* Check if Supabase is configured */}
+          {!import.meta.env.VITE_SUPABASE_URL && (
+            <div className="mb-4 p-3 bg-yellow-500/10 border border-yellow-500/20 rounded-lg text-yellow-400 text-sm">
+              ⚠️ Database chưa được cấu hình. Vui lòng thêm VITE_SUPABASE_URL và VITE_SUPABASE_ANON_KEY vào Vercel Environment Variables.
+            </div>
+          )}
+
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-slate-300 mb-1">Email</label>
