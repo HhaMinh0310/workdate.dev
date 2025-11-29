@@ -21,6 +21,13 @@ export const CoupleCreate: React.FC = () => {
     }
 
     const startDate = new Date(startTime);
+    
+    // Validate the date object
+    if (isNaN(startDate.getTime())) {
+      alert('The selected start time is invalid. Please check your input.');
+      return;
+    }
+
     let endDate = new Date(startDate);
     switch (duration) {
       case '1 Hour':

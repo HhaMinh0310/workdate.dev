@@ -2,14 +2,61 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ChevronLeft, Laptop, MapPin, Code, User, Clock } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
+import { addSoloSession, CURRENT_USER } from '../../services/mockData';
+import { SoloSession } from '../../types';
 
 export const SoloCreate: React.FC = () => {
   const navigate = useNavigate();
+  const [title, setTitle] = useState('');
+  const [startTime, setStartTime] = useState('');
+  const [duration, setDuration] = useState('1 Hour');
   const [mode, setMode] = useState<'online' | 'offline'>('online');
+  const [location, setLocation] = useState('');
+  const [techStack, setTechStack] = useState('');
+  const [bio, setBio] = useState('');
+  const [level, setLevel] = useState('Anyone');
+  const [vibe, setVibe] = useState('Silent Work');
+  
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // API logic here
+    if (!title.trim() || !startTime) {
+        alert('Please provide a title and a start time.');
+        return;
+    }
+
+    const today = new Date();
+    const [hours, minutes] = startTime.split(':');
+    today.setHours(parseInt(hours, 10), parseInt(minutes, 10), 0, 0);
+
+    let durationHours = 1;
+    if (duration.includes('Hours')) {
+        durationHours = parseInt(duration.split(' ')[0], 10);
+    } else if (duration === 'Half Day') {
+        durationHours = 4;
+    }
+    const endTimeDate = new Date(today.getTime() + durationHours * 60 * 60 * 1000);
+
+    const newSession: SoloSession = {
+        id: `ss_${Date.now()}`,
+        hostUserId: CURRENT_USER.id,
+        hostUser: CURRENT_USER,
+        title,
+        date: today.toISOString().split('T')[0],
+        startTime: startTime,
+        endTime: `${endTimeDate.getHours().toString().padStart(2,'0')}:${endTimeDate.getMinutes().toString().padStart(2,'0')}`,
+        mode,
+        location: mode === 'offline' ? location : undefined,
+        description: bio,
+        techStack: techStack.split(',').map(s => s.trim()).filter(Boolean),
+        partnerPreferences: {
+            level,
+            role: ['Any'], // Simplified for MVP
+            vibe: [vibe],
+        },
+    };
+    
+    addSoloSession(newSession);
     navigate('/solo/browse');
   };
 
@@ -40,17 +87,29 @@ export const SoloCreate: React.FC = () => {
                   type="text" 
                   placeholder="e.g. Late Night Rust Debugging" 
                   className="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-slate-200 focus:outline-none focus:border-primary"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
                     <label className="block text-sm font-medium text-slate-300 mb-1">Start Time</label>
-                    <input type="time" className="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-slate-200 focus:outline-none focus:border-primary" />
+                    <input 
+                      required
+                      type="time" 
+                      className="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-slate-200 focus:outline-none focus:border-primary" 
+                      value={startTime}
+                      onChange={(e) => setStartTime(e.target.value)}
+                    />
                 </div>
                 <div>
                     <label className="block text-sm font-medium text-slate-300 mb-1">Duration</label>
-                    <select className="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-slate-200 focus:outline-none focus:border-primary">
+                    <select 
+                      className="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-slate-200 focus:outline-none focus:border-primary"
+                      value={duration}
+                      onChange={(e) => setDuration(e.target.value)}
+                    >
                         <option>1 Hour</option>
                         <option>2 Hours</option>
                         <option>3 Hours</option>
@@ -86,6 +145,8 @@ export const SoloCreate: React.FC = () => {
                       type="text" 
                       placeholder="e.g. Starbucks, 3rd Ave" 
                       className="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-slate-200 focus:outline-none focus:border-primary"
+                      value={location}
+                      onChange={(e) => setLocation(e.target.value)}
                     />
                   </div>
               )}
@@ -102,6 +163,8 @@ export const SoloCreate: React.FC = () => {
                   type="text" 
                   placeholder="React, Node.js, TypeScript..." 
                   className="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-slate-200 focus:outline-none focus:border-primary"
+                  value={techStack}
+                  onChange={(e) => setTechStack(e.target.value)}
                 />
               </div>
               <div>
@@ -110,6 +173,8 @@ export const SoloCreate: React.FC = () => {
                   rows={3}
                   placeholder="I'm trying to finish a hackathon project. Need focus." 
                   className="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-slate-200 focus:outline-none focus:border-primary resize-none"
+                  value={bio}
+                  onChange={(e) => setBio(e.target.value)}
                 />
               </div>
             </section>
@@ -122,7 +187,11 @@ export const SoloCreate: React.FC = () => {
                <div className="grid grid-cols-2 gap-4">
                     <div>
                         <label className="block text-sm font-medium text-slate-300 mb-1">Level</label>
-                        <select className="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-slate-200 focus:outline-none focus:border-primary">
+                        <select 
+                          className="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-slate-200 focus:outline-none focus:border-primary"
+                          value={level}
+                          onChange={(e) => setLevel(e.target.value)}
+                        >
                             <option>Anyone</option>
                             <option>Student</option>
                             <option>Junior</option>
@@ -132,7 +201,11 @@ export const SoloCreate: React.FC = () => {
                     </div>
                     <div>
                          <label className="block text-sm font-medium text-slate-300 mb-1">Vibe</label>
-                        <select className="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-slate-200 focus:outline-none focus:border-primary">
+                        <select 
+                          className="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-slate-200 focus:outline-none focus:border-primary"
+                          value={vibe}
+                          onChange={(e) => setVibe(e.target.value)}
+                        >
                             <option>Silent Work</option>
                             <option>Chatty / Social</option>
                             <option>Pomodoro Style</option>

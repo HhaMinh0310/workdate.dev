@@ -1,14 +1,20 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MOCK_SOLO_SESSIONS } from '../../services/mockData';
 import { Button } from '../../components/ui/Button';
-import { X, MapPin, Laptop, Briefcase, ChevronLeft, Clock, Calendar, CheckCircle } from 'lucide-react';
+import { X, MapPin, Laptop, Briefcase, ChevronLeft, Clock, Calendar, CheckCircle, Plus } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { SoloSession } from '../../types';
 
 export const SoloBrowse: React.FC = () => {
+  const [sessions, setSessions] = useState<SoloSession[]>([]);
   const [selectedSession, setSelectedSession] = useState<SoloSession | null>(null);
   const [requestStatus, setRequestStatus] = useState<'idle' | 'sending' | 'sent'>('idle');
+
+  useEffect(() => {
+    // Simulate fetching data on component mount
+    setSessions([...MOCK_SOLO_SESSIONS]);
+  }, []);
 
   const handleRequest = () => {
     setRequestStatus('sending');
@@ -36,11 +42,20 @@ export const SoloBrowse: React.FC = () => {
                         <p className="text-xs text-slate-400">Find your perfect workdate partner</p>
                     </div>
                 </div>
-                {/* Simple Filters Placeholder */}
-                <div className="hidden md:flex gap-2">
-                    <span className="px-3 py-1 bg-primary/20 text-primary text-xs font-medium rounded-full border border-primary/30">All</span>
-                    <span className="px-3 py-1 bg-surface text-slate-400 text-xs font-medium rounded-full border border-slate-700">Online</span>
-                    <span className="px-3 py-1 bg-surface text-slate-400 text-xs font-medium rounded-full border border-slate-700">Offline</span>
+                
+                <div className="flex items-center gap-4">
+                    {/* Simple Filters Placeholder */}
+                    <div className="hidden md:flex gap-2">
+                        <span className="px-3 py-1 bg-primary/20 text-primary text-xs font-medium rounded-full border border-primary/30">All</span>
+                        <span className="px-3 py-1 bg-surface text-slate-400 text-xs font-medium rounded-full border border-slate-700">Online</span>
+                        <span className="px-3 py-1 bg-surface text-slate-400 text-xs font-medium rounded-full border border-slate-700">Offline</span>
+                    </div>
+                    {/* Create Session Button */}
+                    <Link to="/solo/create" className="hidden md:flex">
+                        <Button variant="outline" size="sm" icon={<Plus size={16} />}>
+                            Create Session
+                        </Button>
+                    </Link>
                 </div>
            </div>
        </div>
@@ -48,7 +63,7 @@ export const SoloBrowse: React.FC = () => {
        {/* Grid Content */}
        <div className="flex-1 p-4 md:p-6 max-w-6xl mx-auto w-full">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {MOCK_SOLO_SESSIONS.map((session) => (
+                {sessions.map((session) => (
                     <motion.div 
                         key={session.id}
                         layoutId={`card-${session.id}`}
