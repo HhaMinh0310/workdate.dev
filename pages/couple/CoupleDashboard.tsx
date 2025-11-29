@@ -95,10 +95,10 @@ export const CoupleDashboard: React.FC = () => {
               variant="secondary"
               size="lg"
               className="w-full"
-              onClick={() => navigate('/couple/create')}
+              onClick={() => navigate('/couple/find-partner')}
             >
               <UserPlus size={18} className="mr-2" />
-              Invite Partner
+              Kết nối Partner
             </Button>
             <Button
               variant="primary"
@@ -106,7 +106,7 @@ export const CoupleDashboard: React.FC = () => {
               className="w-full"
               onClick={() => navigate('/solo/browse')}
             >
-              Find Partner in Solo Mode
+              Tìm trong Solo Mode
             </Button>
           </div>
 
