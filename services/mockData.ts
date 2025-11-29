@@ -42,7 +42,7 @@ export const addCoupleSession = (session: CoupleSession) => {
 };
 
 
-export const MOCK_SOLO_SESSIONS: SoloSession[] = [
+export let MOCK_SOLO_SESSIONS: SoloSession[] = [
   {
     id: 'ss1',
     hostUserId: 'u3',
@@ -148,3 +148,7 @@ export const MOCK_SOLO_SESSIONS: SoloSession[] = [
     },
   },
 ];
+
+export const addSoloSession = (session: SoloSession) => {
+  MOCK_SOLO_SESSIONS.unshift(session);
+};
