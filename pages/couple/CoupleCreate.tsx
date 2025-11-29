@@ -23,36 +23,9 @@ export const CoupleCreate: React.FC = () => {
       return;
     }
 
-<<<<<<< HEAD
     if (!user) {
       setError('You must be logged in to create a session.');
       return;
-=======
-    const startDate = new Date(startTime);
-    
-    // Validate the date object
-    if (isNaN(startDate.getTime())) {
-      alert('The selected start time is invalid. Please check your input.');
-      return;
-    }
-
-    let endDate = new Date(startDate);
-    switch (duration) {
-      case '1 Hour':
-        endDate.setHours(startDate.getHours() + 1);
-        break;
-      case '2 Hours':
-        endDate.setHours(startDate.getHours() + 2);
-        break;
-      case '3 Hours':
-        endDate.setHours(startDate.getHours() + 3);
-        break;
-      case 'Until Done':
-        endDate.setHours(startDate.getHours() + 8); // A long session
-        break;
-      default:
-        endDate.setHours(startDate.getHours() + 1);
->>>>>>> 706330ff6bc09eb9130c489da1ce015ec9816e14
     }
 
     setLoading(true);

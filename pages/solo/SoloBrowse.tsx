@@ -8,18 +8,13 @@ import { Link } from 'react-router-dom';
 import { SoloSession } from '../../types';
 
 export const SoloBrowse: React.FC = () => {
-<<<<<<< HEAD
   const { user } = useAuth();
   const [sessions, setSessions] = useState<SoloSession[]>([]);
   const [loading, setLoading] = useState(true);
-=======
-  const [sessions, setSessions] = useState<SoloSession[]>([]);
->>>>>>> 706330ff6bc09eb9130c489da1ce015ec9816e14
   const [selectedSession, setSelectedSession] = useState<SoloSession | null>(null);
   const [requestStatus, setRequestStatus] = useState<'idle' | 'sending' | 'sent'>('idle');
 
   useEffect(() => {
-<<<<<<< HEAD
     const loadSessions = async () => {
       try {
         const data = await soloSessionService.getSoloSessions({ status: 'open' });
@@ -40,13 +35,6 @@ export const SoloBrowse: React.FC = () => {
       return;
     }
 
-=======
-    // Simulate fetching data on component mount
-    setSessions([...MOCK_SOLO_SESSIONS]);
-  }, []);
-
-  const handleRequest = () => {
->>>>>>> 706330ff6bc09eb9130c489da1ce015ec9816e14
     setRequestStatus('sending');
     try {
       await soloSessionService.requestWorkdate(selectedSession.id, user.id);
@@ -96,14 +84,10 @@ export const SoloBrowse: React.FC = () => {
 
        {/* Grid Content */}
        <div className="flex-1 p-4 md:p-6 max-w-6xl mx-auto w-full">
-<<<<<<< HEAD
             {loading ? (
               <div className="text-center text-slate-400 py-12">Loading sessions...</div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-=======
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
->>>>>>> 706330ff6bc09eb9130c489da1ce015ec9816e14
                 {sessions.map((session) => (
                     <motion.div 
                         key={session.id}
