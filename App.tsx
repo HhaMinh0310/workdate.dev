@@ -57,12 +57,22 @@ const App: React.FC = () => {
     <AuthProvider>
       <Router>
         <Routes>
+          {/* Public Routes - No authentication required */}
           <Route path="/" element={<Landing />} />
-          
-          {/* Auth Routes */}
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           
+          {/* Solo Browse is public - anyone can view sessions */}
+          <Route 
+            path="/solo/browse" 
+            element={
+              <>
+                <Navbar />
+                <SoloBrowse />
+              </>
+            } 
+          />
+
           {/* Protected Routes - Require Authentication */}
           <Route 
             path="/couple" 
@@ -91,7 +101,6 @@ const App: React.FC = () => {
             } 
           />
 
-          {/* Solo Routes */}
           <Route 
             path="/solo" 
             element={
@@ -108,15 +117,6 @@ const App: React.FC = () => {
                 <Navbar />
                 <SoloCreate />
               </ProtectedRoute>
-            } 
-          />
-          <Route 
-            path="/solo/browse" 
-            element={
-              <>
-                <Navbar />
-                <SoloBrowse />
-              </>
             } 
           />
         </Routes>

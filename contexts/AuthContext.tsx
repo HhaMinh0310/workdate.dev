@@ -20,11 +20,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<SupabaseUser | null>(null);
   const [profile, setProfile] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-  const [initialized, setInitialized] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
     let subscription: any = null;
+
+    // Set timeout to prevent infinite loading
+    const timeout = setTimeout(() => {
+      if (isMounted && loading) {
+        console.warn('Auth initialization timeout - setting loading to false');
+        setLoading(false);
+      }
+    }, 3000); // 3 second timeout
 
     const initAuth = async () => {
       try {
@@ -34,14 +41,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           setUser(currentUser);
           if (currentUser) {
             await loadProfile(currentUser.id);
+          } else {
+            setLoading(false);
           }
         }
       } catch (err) {
         console.error('Error getting current user:', err);
-      } finally {
         if (isMounted) {
           setLoading(false);
-          setInitialized(true);
         }
       }
 
@@ -64,6 +71,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         subscription = data?.subscription;
       } catch (err) {
         console.error('Error setting up auth listener:', err);
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     };
 
@@ -71,6 +81,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     return () => {
       isMounted = false;
+      clearTimeout(timeout);
       if (subscription) {
         subscription.unsubscribe();
       }
