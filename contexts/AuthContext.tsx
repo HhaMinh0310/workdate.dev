@@ -32,27 +32,33 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           setLoading(false);
         }
       })
-      .catch(() => {
+      .catch((err) => {
+        console.error('Error getting current user:', err);
         setLoading(false);
       });
 
     // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        if (session?.user) {
-          setUser(session.user);
-          await loadProfile(session.user.id);
-        } else {
-          setUser(null);
-          setProfile(null);
+    try {
+      const { data: { subscription } } = supabase.auth.onAuthStateChange(
+        async (event, session) => {
+          if (session?.user) {
+            setUser(session.user);
+            await loadProfile(session.user.id);
+          } else {
+            setUser(null);
+            setProfile(null);
+          }
+          setLoading(false);
         }
-        setLoading(false);
-      }
-    );
+      );
 
-    return () => {
-      subscription.unsubscribe();
-    };
+      return () => {
+        subscription.unsubscribe();
+      };
+    } catch (err) {
+      console.error('Error setting up auth listener:', err);
+      setLoading(false);
+    }
   }, []);
 
   const loadProfile = async (userId: string) => {
