@@ -6,21 +6,28 @@ import { useAuth } from '../../contexts/AuthContext';
 import { coupleSessionService } from '../../services/coupleSession.service';
 import { partnershipService } from '../../services/partnership.service';
 
-// Helper to get default date (today)
-const getDefaultDate = () => {
-  const now = new Date();
-  return now.toISOString().split('T')[0];
-};
-
-// Helper to get default time (next hour)
-const getDefaultTime = () => {
+// Helper to get default datetime (next hour from now)
+// Returns both date and time from the same Date object to avoid rollover inconsistency
+const getDefaultDateTime = () => {
   const now = new Date();
   now.setHours(now.getHours() + 1);
   now.setMinutes(0);
+  now.setSeconds(0);
+  now.setMilliseconds(0);
+  
+  // Extract date (YYYY-MM-DD)
+  const date = now.toISOString().split('T')[0];
+  
+  // Extract time (HH:MM)
   const hours = now.getHours().toString().padStart(2, '0');
   const minutes = now.getMinutes().toString().padStart(2, '0');
-  return `${hours}:${minutes}`;
+  const time = `${hours}:${minutes}`;
+  
+  return { date, time };
 };
+
+// Get defaults once to ensure consistency
+const defaults = getDefaultDateTime();
 
 // Helper to get min date (today)
 const getMinDate = () => {
@@ -30,10 +37,9 @@ const getMinDate = () => {
 export const CoupleCreate: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const defaultDateTime = getDefaultDateTime();
   const [title, setTitle] = useState('');
-  const [startDate, setStartDate] = useState(defaultDateTime.date);
-  const [startTime, setStartTime] = useState(defaultDateTime.time);
+  const [startDate, setStartDate] = useState(defaults.date);
+  const [startTime, setStartTime] = useState(defaults.time);
   const [duration, setDuration] = useState('1 Hour');
   const [mode, setMode] = useState<'online' | 'offline'>('online');
   const [location, setLocation] = useState('');
