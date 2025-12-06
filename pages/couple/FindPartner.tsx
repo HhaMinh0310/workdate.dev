@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ChevronLeft, Search, Heart, UserPlus, AlertCircle, CheckCircle } from 'lucide-react';
+import { ChevronLeft, Search, Heart, UserPlus, AlertCircle, CheckCircle, Loader2 } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../services/supabase';
@@ -31,7 +31,6 @@ export const FindPartner: React.FC = () => {
     setFoundUser(null);
 
     try {
-      // Search for user by email in auth.users (via profiles)
       const { data: users, error: searchError } = await supabase
         .from('profiles')
         .select('id, display_name, avatar_url, status')
@@ -39,23 +38,18 @@ export const FindPartner: React.FC = () => {
 
       if (searchError) throw searchError;
 
-      // We need to find the user by email - but profiles don't have email
-      // So we search auth.users indirectly
       const { data: authUser, error: authError } = await supabase.rpc(
         'get_user_by_email',
         { user_email: email.trim().toLowerCase() }
       );
 
-      // If RPC doesn't exist, try alternative approach
       if (authError) {
-        // Fallback: Just show error that we can't search
         setError('Không tìm thấy người dùng với email này. Họ cần đăng ký tài khoản trước.');
         setLoading(false);
         return;
       }
 
       if (authUser && authUser.length > 0) {
-        // Get profile info
         const { data: profileData } = await supabase
           .from('profiles')
           .select('*')
@@ -88,7 +82,6 @@ export const FindPartner: React.FC = () => {
     try {
       await partnershipService.createPartnership(user.id, foundUser.id);
       setSuccess(true);
-      // Redirect to couple dashboard after 2 seconds
       setTimeout(() => {
         navigate('/couple');
       }, 2000);
@@ -107,12 +100,12 @@ export const FindPartner: React.FC = () => {
   if (success) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-4">
-        <div className="bg-surface border border-green-500/30 rounded-2xl p-8 text-center max-w-md">
-          <div className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
-            <CheckCircle className="w-8 h-8 text-green-500" />
+        <div className="neu-card p-10 text-center max-w-md animate-fade-in">
+          <div className="w-20 h-20 mx-auto mb-6 neu-icon-wrap rounded-full flex items-center justify-center bg-success/10">
+            <CheckCircle className="w-10 h-10 text-success" />
           </div>
-          <h2 className="text-2xl font-bold text-white mb-2">Kết nối thành công!</h2>
-          <p className="text-slate-400 mb-4">
+          <h2 className="text-2xl font-heading font-bold text-text-primary mb-3">Kết nối thành công!</h2>
+          <p className="text-text-secondary">
             Bạn và {foundUser?.display_name} giờ là partner. Đang chuyển hướng...
           </p>
         </div>
@@ -122,42 +115,42 @@ export const FindPartner: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-background p-4 md:p-8">
-      <div className="max-w-xl mx-auto">
-        <button onClick={() => navigate('/couple')} className="flex items-center text-slate-400 hover:text-white mb-6">
+      <div className="max-w-xl mx-auto pt-4">
+        <button onClick={() => navigate('/couple')} className="flex items-center text-text-secondary hover:text-primary mb-6 transition-colors">
           <ChevronLeft size={20} /> Quay lại
         </button>
 
-        <div className="bg-surface border border-slate-700 rounded-2xl p-6 md:p-8">
+        <div className="neu-card p-8">
           <div className="text-center mb-8">
-            <div className="w-16 h-16 bg-secondary/20 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Heart className="w-8 h-8 text-secondary" />
+            <div className="w-16 h-16 neu-icon-wrap rounded-2xl flex items-center justify-center mx-auto mb-4">
+              <Heart className="w-8 h-8 text-primary" />
             </div>
-            <h1 className="text-2xl font-bold text-white mb-2">Tìm Partner</h1>
-            <p className="text-slate-400">
+            <h1 className="text-2xl font-heading font-bold text-text-primary mb-2">Tìm Partner</h1>
+            <p className="text-text-secondary">
               Nhập email của partner để kết nối và bắt đầu làm việc cùng nhau
             </p>
           </div>
 
           {error && (
-            <div className="mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-lg flex items-start gap-3">
-              <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
-              <p className="text-red-400 text-sm">{error}</p>
+            <div className="mb-6 p-4 bg-error/10 border border-error/20 rounded-neu flex items-start gap-3">
+              <AlertCircle className="w-5 h-5 text-error flex-shrink-0 mt-0.5" />
+              <p className="text-error text-sm">{error}</p>
             </div>
           )}
 
           {/* Search form */}
-          <div className="space-y-4">
+          <div className="space-y-5">
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">
+              <label className="block text-sm font-semibold text-text-primary mb-2">
                 Email của partner
               </label>
-              <div className="flex gap-2">
+              <div className="flex gap-3">
                 <input
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="partner@example.com"
-                  className="flex-1 bg-slate-900 border border-slate-700 rounded-lg px-4 py-3 text-slate-200 focus:outline-none focus:border-secondary"
+                  className="flex-1 neu-input px-4 py-3.5 text-text-primary placeholder:text-text-muted"
                   onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
                 />
                 <Button
@@ -165,38 +158,40 @@ export const FindPartner: React.FC = () => {
                   disabled={loading}
                   className="px-6"
                 >
-                  <Search size={18} />
+                  {loading ? <Loader2 size={18} className="animate-spin" /> : <Search size={18} />}
                 </Button>
               </div>
             </div>
 
             {/* Found user card */}
             {foundUser && (
-              <div className="mt-6 p-4 bg-secondary/10 border border-secondary/30 rounded-xl animate-fade-in">
+              <div className="mt-6 p-5 bg-primary-light/20 border border-primary-light/30 rounded-neu animate-fade-in">
                 <div className="flex items-center gap-4">
-                  <div className="w-14 h-14 rounded-full bg-secondary/30 flex items-center justify-center text-secondary text-xl font-bold">
-                    {foundUser.display_name?.[0]?.toUpperCase() || '?'}
+                  <div className="w-14 h-14 rounded-full neu-icon-wrap flex items-center justify-center">
+                    <span className="text-primary text-xl font-bold">
+                      {foundUser.display_name?.[0]?.toUpperCase() || '?'}
+                    </span>
                   </div>
                   <div className="flex-1">
-                    <p className="text-white font-semibold">{foundUser.display_name}</p>
-                    <p className="text-sm text-slate-400">{foundUser.email}</p>
+                    <p className="text-text-primary font-semibold">{foundUser.display_name}</p>
+                    <p className="text-sm text-text-secondary">{foundUser.email}</p>
                   </div>
                 </div>
                 <Button
-                  variant="secondary"
-                  className="w-full mt-4"
+                  variant="primary"
+                  className="w-full mt-5"
                   onClick={handleConnect}
                   disabled={loading}
+                  icon={<UserPlus size={18} />}
                 >
-                  <UserPlus size={18} className="mr-2" />
                   {loading ? 'Đang kết nối...' : 'Kết nối làm Partner'}
                 </Button>
               </div>
             )}
 
             {/* Alternative: Create partnership manually */}
-            <div className="mt-8 pt-6 border-t border-slate-700">
-              <p className="text-sm text-slate-400 text-center mb-4">
+            <div className="mt-8 pt-6 border-t border-border-soft">
+              <p className="text-sm text-text-secondary text-center mb-4">
                 Hoặc nhập User ID của partner trực tiếp (nếu họ chia sẻ với bạn)
               </p>
               <ManualConnect userId={user?.id} onSuccess={() => navigate('/couple')} />
@@ -245,29 +240,28 @@ const ManualConnect: React.FC<{ userId?: string; onSuccess: () => void }> = ({ u
   return (
     <div className="space-y-3">
       {error && (
-        <p className="text-red-400 text-xs">{error}</p>
+        <p className="text-error text-xs">{error}</p>
       )}
-      <div className="flex gap-2">
+      <div className="flex gap-3">
         <input
           type="text"
           value={partnerId}
           onChange={(e) => setPartnerId(e.target.value)}
           placeholder="Partner User ID (UUID)"
-          className="flex-1 bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-primary"
+          className="flex-1 neu-input px-4 py-3 text-sm text-text-primary placeholder:text-text-muted"
         />
         <Button
-          variant="primary"
+          variant="secondary"
           size="sm"
           onClick={handleConnect}
           disabled={loading || !partnerId.trim()}
         >
-          {loading ? '...' : 'Connect'}
+          {loading ? <Loader2 size={16} className="animate-spin" /> : 'Connect'}
         </Button>
       </div>
-      <p className="text-xs text-slate-500">
-        User ID của bạn: <code className="bg-slate-800 px-1 rounded text-primary">{userId}</code>
+      <p className="text-xs text-text-muted">
+        User ID của bạn: <code className="bg-surface-dark px-2 py-1 rounded text-primary font-mono">{userId}</code>
       </p>
     </div>
   );
 };
-

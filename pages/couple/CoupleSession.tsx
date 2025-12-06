@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { ChevronLeft, Gift, Lock, Clock, Settings, MapPin, Laptop } from 'lucide-react';
+import { ChevronLeft, Gift, Lock, Clock, Settings, MapPin, Laptop, Loader2 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { coupleSessionService } from '../../services/coupleSession.service';
 import { CoupleSession, Task } from '../../types';
@@ -25,16 +25,13 @@ export const CoupleSessionRoom: React.FC = () => {
     const loadSession = async () => {
       try {
         const sessionData = await coupleSessionService.getCoupleSessionById(id);
-        // Transform the data to match CoupleSession interface
-        // Note: You'll need to fetch partners separately or join them in the query
         setSession({
           ...sessionData,
-          partners: [], // TODO: Fetch partners from partnership
+          partners: [],
           tasks: sessionData.tasks || [],
           rewards: sessionData.rewards || []
         });
         
-        // Find my reward
         const myReward = sessionData.rewards?.find((r: any) => r.giver_user_id === user.id);
         if (myReward) setRewardText(myReward.description);
       } catch (err: any) {
@@ -47,10 +44,51 @@ export const CoupleSessionRoom: React.FC = () => {
     loadSession();
   }, [id, user]);
 
-  if (loading) return <div className="p-10 text-center text-slate-400">Loading session...</div>;
-  if (error) return <div className="p-10 text-center text-red-400">{error}</div>;
-  if (!session) return <div className="p-10 text-center text-slate-400">Session not found.</div>;
-  if (!user || !profile) return <div className="p-10 text-center text-slate-400">Please log in.</div>;
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="neu-card p-8 flex flex-col items-center gap-4">
+          <div className="neu-icon-wrap p-4 rounded-full">
+            <Loader2 className="w-8 h-8 text-primary animate-spin" />
+          </div>
+          <p className="text-text-secondary">Loading session...</p>
+        </div>
+      </div>
+    );
+  }
+  
+  if (error) return (
+    <div className="p-10 text-center">
+      <div className="neu-card p-8 max-w-md mx-auto">
+        <p className="text-error">{error}</p>
+        <Link to="/couple" className="text-primary hover:text-primary-dark mt-4 inline-block">
+          ← Back to Dashboard
+        </Link>
+      </div>
+    </div>
+  );
+  
+  if (!session) return (
+    <div className="p-10 text-center">
+      <div className="neu-card p-8 max-w-md mx-auto">
+        <p className="text-text-secondary">Session not found.</p>
+        <Link to="/couple" className="text-primary hover:text-primary-dark mt-4 inline-block">
+          ← Back to Dashboard
+        </Link>
+      </div>
+    </div>
+  );
+  
+  if (!user || !profile) return (
+    <div className="p-10 text-center">
+      <div className="neu-card p-8 max-w-md mx-auto">
+        <p className="text-text-secondary">Please log in.</p>
+        <Link to="/login" className="text-primary hover:text-primary-dark mt-4 inline-block">
+          Sign In →
+        </Link>
+      </div>
+    </div>
+  );
 
   const myTasks = session.tasks.filter(t => t.ownerUserId === user.id);
   const partnerTasks = session.tasks.filter(t => t.ownerUserId !== user.id);
@@ -127,8 +165,7 @@ export const CoupleSessionRoom: React.FC = () => {
   const handleSaveReward = async () => {
     if (!session || !user || !rewardText.trim()) return;
     
-    // TODO: Get partner user ID from partnership
-    const partnerUserId = ''; // This needs to be retrieved from partnership
+    const partnerUserId = '';
     
     if (!partnerUserId) {
       alert('Partner not found');
@@ -152,23 +189,23 @@ export const CoupleSessionRoom: React.FC = () => {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       {/* Header */}
-      <header className="bg-surface border-b border-slate-700 px-4 py-3 sticky top-0 z-20">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
+      <header className="neu-navbar sticky top-4 mx-4 z-20 rounded-neu-lg">
+        <div className="max-w-7xl mx-auto px-5 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <Link to="/couple" className="text-slate-400 hover:text-white transition-colors">
-              <ChevronLeft size={24} />
+            <Link to="/couple" className="neu-icon-wrap p-2 rounded-xl text-text-secondary hover:text-primary transition-colors">
+              <ChevronLeft size={20} />
             </Link>
             <div>
-              <h1 className="font-bold text-white text-sm md:text-base">{session.title}</h1>
-              <div className="flex items-center gap-2 text-xs text-slate-400">
+              <h1 className="font-heading font-bold text-text-primary text-sm md:text-base">{session.title}</h1>
+              <div className="flex items-center gap-2 text-xs text-text-secondary">
                 <span className="flex items-center gap-1"><Clock size={12}/> 45:00 remaining</span>
-                <span className="w-1 h-1 bg-slate-600 rounded-full"></span>
+                <span className="w-1 h-1 bg-border-soft rounded-full"></span>
                 {session.mode === 'offline' ? (
-                   <span className="flex items-center gap-1 text-green-400">
+                   <span className="flex items-center gap-1 text-warning">
                      <MapPin size={12} /> {session.location || 'Offline'}
                    </span>
                 ) : (
-                   <span className="flex items-center gap-1 text-green-400">
+                   <span className="flex items-center gap-1 text-success">
                      <Laptop size={12} /> Online
                    </span>
                 )}
@@ -179,27 +216,35 @@ export const CoupleSessionRoom: React.FC = () => {
           <div className="flex items-center gap-2">
             <div className="flex -space-x-2">
                 {session.partners.map(p => (
-                    <img key={p.id} src={p.avatarUrl} className="w-8 h-8 rounded-full border-2 border-surface" />
+                    <img key={p.id} src={p.avatarUrl} className="w-8 h-8 rounded-full border-2 border-background shadow-neu-sm" />
                 ))}
             </div>
-            <button className="p-2 text-slate-400 hover:text-white">
-                <Settings size={20} />
+            <button className="neu-icon-wrap p-2 rounded-xl text-text-secondary hover:text-primary transition-colors">
+                <Settings size={18} />
             </button>
           </div>
         </div>
       </header>
 
       {/* Mobile Tab Switcher */}
-      <div className="md:hidden flex border-b border-slate-700 bg-surface/50">
+      <div className="md:hidden flex mx-4 mt-4 p-1 neu-card rounded-neu-lg">
         <button 
           onClick={() => setActiveTab('my')}
-          className={`flex-1 py-3 text-sm font-medium border-b-2 transition-colors ${activeTab === 'my' ? 'border-primary text-primary' : 'border-transparent text-slate-400'}`}
+          className={`flex-1 py-3 text-sm font-semibold rounded-neu transition-all ${
+            activeTab === 'my' 
+              ? 'bg-gradient-to-r from-primary to-primary-dark text-white shadow-neu-sm' 
+              : 'text-text-secondary'
+          }`}
         >
           My Tasks
         </button>
         <button 
           onClick={() => setActiveTab('partner')}
-          className={`flex-1 py-3 text-sm font-medium border-b-2 transition-colors ${activeTab === 'partner' ? 'border-secondary text-secondary' : 'border-transparent text-slate-400'}`}
+          className={`flex-1 py-3 text-sm font-semibold rounded-neu transition-all ${
+            activeTab === 'partner' 
+              ? 'bg-gradient-to-r from-secondary to-secondary/90 text-white shadow-neu-sm' 
+              : 'text-text-secondary'
+          }`}
         >
           {partnerUser?.displayName || 'Partner'}'s Tasks
         </button>
@@ -222,19 +267,23 @@ export const CoupleSessionRoom: React.FC = () => {
             />
             
             {/* Reward I give */}
-            <div className="bg-surface/30 rounded-xl p-5 border border-slate-700/50">
-              <div className="flex items-center gap-2 mb-3 text-purple-400">
-                <Gift size={18} />
-                <h3 className="font-semibold text-sm">Reward for {partnerUser?.displayName || 'Partner'}</h3>
+            <div className="neu-card p-6">
+              <div className="flex items-center gap-2 mb-4 text-secondary">
+                <div className="neu-icon-wrap p-2 rounded-xl">
+                  <Gift size={16} />
+                </div>
+                <h3 className="font-heading font-semibold text-sm">Reward for {partnerUser?.displayName || 'Partner'}</h3>
               </div>
               <textarea 
-                className="w-full bg-slate-900/50 border border-slate-700 rounded-lg p-3 text-sm text-slate-200 focus:outline-none focus:border-purple-500 mb-2 resize-none h-20"
+                className="w-full neu-input p-4 text-sm text-text-primary placeholder:text-text-muted resize-none h-24"
                 placeholder={`What will you give ${partnerUser?.displayName || 'your partner'} if they finish their tasks? (Hidden from them)`}
                 value={rewardText}
                 onChange={(e) => setRewardText(e.target.value)}
               />
-              <div className="flex justify-end">
-                <Button size="sm" variant="ghost" className="text-xs" onClick={handleSaveReward}>Save Secret Reward</Button>
+              <div className="flex justify-end mt-3">
+                <Button size="sm" variant="ghost" onClick={handleSaveReward}>
+                  Save Secret Reward
+                </Button>
               </div>
             </div>
           </div>
@@ -242,26 +291,27 @@ export const CoupleSessionRoom: React.FC = () => {
           {/* Partner Section */}
           <div className={`flex flex-col gap-6 ${activeTab === 'partner' ? 'block' : 'hidden md:flex'}`}>
             <TaskList 
-              title={`${partnerUser?.displayName}'s Focus`} 
+              title={`${partnerUser?.displayName || 'Partner'}'s Focus`} 
               tasks={partnerTasks} 
               isOwner={false}
               onToggle={() => {}}
               onAdd={() => {}}
               onDelete={() => {}}
-              // Partner tasks are read-only for difficulty too, so we can pass the handler but the component will disable the button
               onDifficultyChange={handleDifficultyChange}
             />
 
             {/* Reward waiting for me */}
-            <div className="bg-gradient-to-br from-surface to-slate-800 rounded-xl p-6 border border-slate-700 flex flex-col items-center justify-center text-center relative overflow-hidden">
-                <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-5"></div>
-                <div className="p-4 bg-slate-900 rounded-full mb-3 border border-slate-700">
-                    <Lock size={24} className="text-secondary" />
+            <div className="neu-card p-8 flex flex-col items-center justify-center text-center relative overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-br from-primary-light/10 to-secondary-light/10"></div>
+                <div className="relative z-10">
+                  <div className="neu-icon-wrap p-5 rounded-2xl mb-4">
+                      <Lock size={24} className="text-primary" />
+                  </div>
+                  <h3 className="text-text-primary font-heading font-semibold mb-2">Mystery Reward</h3>
+                  <p className="text-text-secondary text-sm max-w-xs">
+                      {partnerUser?.displayName || 'Your partner'} has prepared a surprise reward for you. Complete your tasks to unlock it!
+                  </p>
                 </div>
-                <h3 className="text-white font-medium mb-1">Mystery Reward</h3>
-                <p className="text-slate-400 text-sm max-w-xs">
-                    {partnerUser?.displayName || 'Your partner'} has prepared a surprise reward for you. Complete your tasks to unlock it!
-                </p>
             </div>
           </div>
 

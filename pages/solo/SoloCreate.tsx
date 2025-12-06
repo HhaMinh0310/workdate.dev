@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ChevronLeft, Laptop, MapPin, Code, User, Clock, Calendar } from 'lucide-react';
+import { ChevronLeft, Laptop, MapPin, Code, User, Clock, Calendar, Sparkles } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import { useAuth } from '../../contexts/AuthContext';
 import { soloSessionService } from '../../services/soloSession.service';
@@ -89,7 +89,7 @@ export const SoloCreate: React.FC = () => {
         tech_stack: techStackArray,
         partner_prefs: {
           level,
-          role: [], // You can add role selection later
+          role: [],
           vibe: vibeArray
         }
       });
@@ -104,37 +104,39 @@ export const SoloCreate: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-background p-4 md:p-8">
-      <div className="max-w-2xl mx-auto">
-        <button onClick={() => navigate('/solo')} className="flex items-center text-slate-400 hover:text-white mb-6">
+      <div className="max-w-2xl mx-auto pt-4">
+        <button onClick={() => navigate('/solo')} className="flex items-center text-text-secondary hover:text-primary mb-6 transition-colors">
           <ChevronLeft size={20} /> Back to dashboard
         </button>
 
-        <div className="bg-surface border border-slate-700 rounded-2xl p-6 md:p-8">
+        <div className="neu-card p-8">
           <div className="mb-8">
-            <h1 className="text-2xl font-bold text-white mb-2">Host a Workdate</h1>
-            <p className="text-slate-400">Create a session listing for other developers to find.</p>
+            <h1 className="text-2xl font-heading font-bold text-text-primary mb-2 flex items-center gap-3">
+              <Sparkles className="text-primary" /> Host a Workdate
+            </h1>
+            <p className="text-text-secondary">Create a session listing for other developers to find.</p>
           </div>
 
           {error && (
-            <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded-lg text-red-400 text-sm">
+            <div className="mb-6 p-4 bg-error/10 border border-error/20 rounded-neu text-error text-sm">
               {error}
             </div>
           )}
 
           <form onSubmit={handleSubmit} className="space-y-8">
             {/* 1. Basics */}
-            <section className="space-y-4">
-              <h2 className="text-lg font-semibold text-primary flex items-center gap-2">
-                <Clock size={18} /> Session Details
+            <section className="space-y-5">
+              <h2 className="text-lg font-heading font-semibold text-text-primary flex items-center gap-2">
+                <Clock size={18} className="text-primary" /> Session Details
               </h2>
               
               <div>
-                <label className="block text-sm font-medium text-slate-300 mb-1">Session Title</label>
+                <label className="block text-sm font-semibold text-text-primary mb-2">Session Title</label>
                 <input 
                   required
                   type="text" 
                   placeholder="e.g. Late Night Rust Debugging" 
-                  className="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-slate-200 focus:outline-none focus:border-primary"
+                  className="w-full neu-input p-4 text-text-primary placeholder:text-text-muted"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                 />
@@ -142,62 +144,70 @@ export const SoloCreate: React.FC = () => {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                    <label className="block text-sm font-medium text-slate-300 mb-1">Ngày</label>
+                    <label className="block text-sm font-semibold text-text-primary mb-2">Date</label>
                     <div className="relative">
                       <input 
                         type="date" 
                         required
                         min={getTodayDate()}
-                        className="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 pr-10 text-slate-200 focus:outline-none focus:border-primary cursor-pointer [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:right-0 [&::-webkit-calendar-picker-indicator]:w-full [&::-webkit-calendar-picker-indicator]:h-full [&::-webkit-calendar-picker-indicator]:cursor-pointer"
+                        className="w-full neu-input p-4 pr-10 text-text-primary cursor-pointer [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:right-0 [&::-webkit-calendar-picker-indicator]:w-full [&::-webkit-calendar-picker-indicator]:h-full [&::-webkit-calendar-picker-indicator]:cursor-pointer"
                         value={date}
                         onChange={(e) => setDate(e.target.value)}
                       />
-                      <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 pointer-events-none" />
+                      <Calendar className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-text-muted pointer-events-none" />
                     </div>
                 </div>
                 <div>
-                    <label className="block text-sm font-medium text-slate-300 mb-1">Giờ bắt đầu</label>
+                    <label className="block text-sm font-semibold text-text-primary mb-2">Start Time</label>
                     <div className="relative">
                       <input 
                         type="time" 
                         required
-                        className="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 pr-10 text-slate-200 focus:outline-none focus:border-primary cursor-pointer [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:right-0 [&::-webkit-calendar-picker-indicator]:w-full [&::-webkit-calendar-picker-indicator]:h-full [&::-webkit-calendar-picker-indicator]:cursor-pointer"
+                        className="w-full neu-input p-4 pr-10 text-text-primary cursor-pointer [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:right-0 [&::-webkit-calendar-picker-indicator]:w-full [&::-webkit-calendar-picker-indicator]:h-full [&::-webkit-calendar-picker-indicator]:cursor-pointer"
                         value={startTime}
                         onChange={(e) => setStartTime(e.target.value)}
                       />
-                      <Clock className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 pointer-events-none" />
+                      <Clock className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-text-muted pointer-events-none" />
                     </div>
                 </div>
               </div>
 
               <div>
-                    <label className="block text-sm font-medium text-slate-300 mb-1">Duration</label>
-                    <select 
-                      className="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-slate-200 focus:outline-none focus:border-primary"
-                      value={duration}
-                      onChange={(e) => setDuration(e.target.value)}
-                    >
-                        <option>1 Hour</option>
-                        <option>2 Hours</option>
-                        <option>3 Hours</option>
-                        <option>Half Day</option>
-                    </select>
-                </div>
+                <label className="block text-sm font-semibold text-text-primary mb-2">Duration</label>
+                <select 
+                  className="w-full neu-input p-4 text-text-primary cursor-pointer"
+                  value={duration}
+                  onChange={(e) => setDuration(e.target.value)}
+                >
+                    <option>1 Hour</option>
+                    <option>2 Hours</option>
+                    <option>3 Hours</option>
+                    <option>Half Day</option>
+                </select>
+              </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-300 mb-2">Mode</label>
+                <label className="block text-sm font-semibold text-text-primary mb-3">Mode</label>
                 <div className="flex gap-4">
                   <button
                     type="button"
                     onClick={() => setMode('online')}
-                    className={`flex-1 py-3 px-4 rounded-lg border flex items-center justify-center gap-2 transition-all ${mode === 'online' ? 'bg-primary/20 border-primary text-primary' : 'bg-slate-900 border-slate-700 text-slate-400'}`}
+                    className={`flex-1 py-4 px-4 rounded-neu flex items-center justify-center gap-2 transition-all ${
+                      mode === 'online' 
+                        ? 'neu-btn-primary text-white shadow-neu' 
+                        : 'neu-btn text-text-secondary'
+                    }`}
                   >
                     <Laptop size={18} /> Online
                   </button>
                   <button
                     type="button"
                     onClick={() => setMode('offline')}
-                    className={`flex-1 py-3 px-4 rounded-lg border flex items-center justify-center gap-2 transition-all ${mode === 'offline' ? 'bg-primary/20 border-primary text-primary' : 'bg-slate-900 border-slate-700 text-slate-400'}`}
+                    className={`flex-1 py-4 px-4 rounded-neu flex items-center justify-center gap-2 transition-all ${
+                      mode === 'offline' 
+                        ? 'neu-btn-primary text-white shadow-neu' 
+                        : 'neu-btn text-text-secondary'
+                    }`}
                   >
                     <MapPin size={18} /> Offline
                   </button>
@@ -206,11 +216,11 @@ export const SoloCreate: React.FC = () => {
 
               {mode === 'offline' && (
                   <div className="animate-fade-in-up">
-                    <label className="block text-sm font-medium text-slate-300 mb-1">Location / Cafe</label>
+                    <label className="block text-sm font-semibold text-text-primary mb-2">Location / Cafe</label>
                     <input 
                       type="text" 
                       placeholder="e.g. Starbucks, 3rd Ave" 
-                      className="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-slate-200 focus:outline-none focus:border-primary"
+                      className="w-full neu-input p-4 text-text-primary placeholder:text-text-muted"
                       value={location}
                       onChange={(e) => setLocation(e.target.value)}
                     />
@@ -219,26 +229,26 @@ export const SoloCreate: React.FC = () => {
             </section>
 
             {/* 2. Tech Stack */}
-            <section className="space-y-4 pt-4 border-t border-slate-700">
-               <h2 className="text-lg font-semibold text-primary flex items-center gap-2">
-                <Code size={18} /> What are you working on?
+            <section className="space-y-5 pt-6 border-t border-border-soft">
+               <h2 className="text-lg font-heading font-semibold text-text-primary flex items-center gap-2">
+                <Code size={18} className="text-secondary" /> What are you working on?
               </h2>
                <div>
-                <label className="block text-sm font-medium text-slate-300 mb-1">Tech Stack (comma separated)</label>
+                <label className="block text-sm font-semibold text-text-primary mb-2">Tech Stack (comma separated)</label>
                 <input 
                   type="text" 
                   placeholder="React, Node.js, TypeScript..." 
-                  className="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-slate-200 focus:outline-none focus:border-primary"
+                  className="w-full neu-input p-4 text-text-primary placeholder:text-text-muted"
                   value={techStack}
                   onChange={(e) => setTechStack(e.target.value)}
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-300 mb-1">Quick Bio / Goal</label>
+                <label className="block text-sm font-semibold text-text-primary mb-2">Quick Bio / Goal</label>
                 <textarea 
                   rows={3}
                   placeholder="I'm trying to finish a hackathon project. Need focus." 
-                  className="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-slate-200 focus:outline-none focus:border-primary resize-none"
+                  className="w-full neu-input p-4 text-text-primary placeholder:text-text-muted resize-none"
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                 />
@@ -246,15 +256,15 @@ export const SoloCreate: React.FC = () => {
             </section>
 
              {/* 3. Partner Prefs */}
-             <section className="space-y-4 pt-4 border-t border-slate-700">
-               <h2 className="text-lg font-semibold text-primary flex items-center gap-2">
-                <User size={18} /> Partner Preferences
+             <section className="space-y-5 pt-6 border-t border-border-soft">
+               <h2 className="text-lg font-heading font-semibold text-text-primary flex items-center gap-2">
+                <User size={18} className="text-primary" /> Partner Preferences
               </h2>
                <div className="grid grid-cols-2 gap-4">
                     <div>
-                        <label className="block text-sm font-medium text-slate-300 mb-1">Level</label>
+                        <label className="block text-sm font-semibold text-text-primary mb-2">Level</label>
                         <select 
-                          className="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-slate-200 focus:outline-none focus:border-primary"
+                          className="w-full neu-input p-4 text-text-primary cursor-pointer"
                           value={level}
                           onChange={(e) => setLevel(e.target.value)}
                         >
@@ -266,9 +276,9 @@ export const SoloCreate: React.FC = () => {
                         </select>
                     </div>
                     <div>
-                         <label className="block text-sm font-medium text-slate-300 mb-1">Vibe</label>
+                         <label className="block text-sm font-semibold text-text-primary mb-2">Vibe</label>
                         <select 
-                          className="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-slate-200 focus:outline-none focus:border-primary"
+                          className="w-full neu-input p-4 text-text-primary cursor-pointer"
                           value={vibe}
                           onChange={(e) => setVibe(e.target.value)}
                         >
@@ -280,12 +290,13 @@ export const SoloCreate: React.FC = () => {
                </div>
             </section>
 
-            <div className="pt-6">
+            <div className="pt-4">
                 <Button 
                   type="submit" 
                   className="w-full font-bold text-lg" 
                   size="lg"
                   disabled={loading}
+                  icon={<Sparkles size={18} />}
                 >
                   {loading ? 'Creating...' : 'Create Workdate'}
                 </Button>

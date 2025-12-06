@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ChevronLeft, Laptop, MapPin, Clock, Heart, UserPlus, Copy, Check, Calendar } from 'lucide-react';
+import { ChevronLeft, Laptop, MapPin, Clock, Heart, UserPlus, Copy, Check, Calendar, Loader2 } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import { useAuth } from '../../contexts/AuthContext';
 import { coupleSessionService } from '../../services/coupleSession.service';
@@ -12,7 +12,6 @@ const getDefaultDateTime = () => {
   now.setHours(now.getHours() + 1);
   now.setMinutes(0);
   now.setSeconds(0);
-  // Format: YYYY-MM-DDTHH:MM
   return now.toISOString().slice(0, 16);
 };
 
@@ -35,10 +34,6 @@ export const CoupleCreate: React.FC = () => {
   const [partnershipId, setPartnershipId] = useState<string | null>(null);
   const [partner, setPartner] = useState<any>(null);
   
-  // For creating partnership
-  const [showInvite, setShowInvite] = useState(false);
-  const [partnerEmail, setPartnerEmail] = useState('');
-  const [inviteLoading, setInviteLoading] = useState(false);
   const [copied, setCopied] = useState(false);
 
   // Load partnership on mount
@@ -54,7 +49,6 @@ export const CoupleCreate: React.FC = () => {
         if (partnerships && partnerships.length > 0) {
           const partnership = partnerships[0];
           setPartnershipId(partnership.id);
-          // Determine who is the partner
           const partnerData = partnership.user1.id === user.id 
             ? partnership.user2 
             : partnership.user1;
@@ -138,7 +132,12 @@ export const CoupleCreate: React.FC = () => {
   if (loadingPartnership) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-secondary"></div>
+        <div className="neu-card p-8 flex flex-col items-center gap-4">
+          <div className="neu-icon-wrap p-4 rounded-full">
+            <Loader2 className="w-8 h-8 text-primary animate-spin" />
+          </div>
+          <p className="text-text-secondary">Loading...</p>
+        </div>
       </div>
     );
   }
@@ -147,32 +146,32 @@ export const CoupleCreate: React.FC = () => {
   if (!partnershipId) {
     return (
       <div className="min-h-screen bg-background p-4 md:p-8">
-        <div className="max-w-2xl mx-auto">
-          <button onClick={() => navigate('/couple')} className="flex items-center text-slate-400 hover:text-white mb-6">
+        <div className="max-w-2xl mx-auto pt-4">
+          <button onClick={() => navigate('/couple')} className="flex items-center text-text-secondary hover:text-primary mb-6 transition-colors">
             <ChevronLeft size={20} /> Back to dashboard
           </button>
 
-          <div className="bg-surface border border-slate-700 rounded-2xl p-6 md:p-8">
+          <div className="neu-card p-8">
             <div className="text-center mb-8">
-              <div className="w-16 h-16 bg-secondary/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                <UserPlus className="w-8 h-8 text-secondary" />
+              <div className="w-16 h-16 neu-icon-wrap rounded-2xl flex items-center justify-center mx-auto mb-4">
+                <UserPlus className="w-8 h-8 text-primary" />
               </div>
-              <h1 className="text-2xl font-bold text-white mb-2">Find Your Partner</h1>
-              <p className="text-slate-400">
+              <h1 className="text-2xl font-heading font-bold text-text-primary mb-2">Find Your Partner</h1>
+              <p className="text-text-secondary">
                 Couple Mode requires a partner. Invite someone to work together!
               </p>
             </div>
 
             <div className="space-y-6">
               {/* Option 1: Share invite link */}
-              <div className="p-4 bg-slate-900 rounded-xl">
-                <h3 className="font-medium text-white mb-2">Option 1: Share Invite Link</h3>
-                <p className="text-sm text-slate-400 mb-3">
+              <div className="neu-card-inset p-5">
+                <h3 className="font-semibold text-text-primary mb-2">Option 1: Share Invite Link</h3>
+                <p className="text-sm text-text-secondary mb-4">
                   Send this link to your partner so they can sign up and connect with you.
                 </p>
                 <button
                   onClick={copyInviteLink}
-                  className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-secondary/20 text-secondary rounded-lg hover:bg-secondary/30 transition-colors"
+                  className="w-full flex items-center justify-center gap-2 py-3 px-4 neu-btn rounded-neu text-primary font-semibold hover:shadow-neu-hover transition-all"
                 >
                   {copied ? <Check size={18} /> : <Copy size={18} />}
                   {copied ? 'Copied!' : 'Copy Invite Link'}
@@ -180,13 +179,13 @@ export const CoupleCreate: React.FC = () => {
               </div>
 
               {/* Option 2: Use Solo Mode */}
-              <div className="p-4 bg-slate-900 rounded-xl">
-                <h3 className="font-medium text-white mb-2">Option 2: Try Solo Mode</h3>
-                <p className="text-sm text-slate-400 mb-3">
+              <div className="neu-card-inset p-5">
+                <h3 className="font-semibold text-text-primary mb-2">Option 2: Try Solo Mode</h3>
+                <p className="text-sm text-text-secondary mb-4">
                   Don't have a partner yet? Find one through Solo Mode!
                 </p>
                 <Button
-                  variant="primary"
+                  variant="secondary"
                   className="w-full"
                   onClick={() => navigate('/solo/create')}
                 >
@@ -194,13 +193,10 @@ export const CoupleCreate: React.FC = () => {
                 </Button>
               </div>
 
-              {/* Info about how partnership works */}
-              <div className="text-center text-sm text-slate-500 mt-6">
-                <p>
-                  Once your partner signs up using your invite link, 
-                  you'll be automatically paired and can create couple sessions together.
-                </p>
-              </div>
+              <p className="text-center text-sm text-text-muted pt-2">
+                Once your partner signs up using your invite link, 
+                you'll be automatically paired and can create couple sessions together.
+              </p>
             </div>
           </div>
         </div>
@@ -210,54 +206,56 @@ export const CoupleCreate: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-background p-4 md:p-8">
-      <div className="max-w-2xl mx-auto">
-        <button onClick={() => navigate('/couple')} className="flex items-center text-slate-400 hover:text-white mb-6">
+      <div className="max-w-2xl mx-auto pt-4">
+        <button onClick={() => navigate('/couple')} className="flex items-center text-text-secondary hover:text-primary mb-6 transition-colors">
           <ChevronLeft size={20} /> Back to dashboard
         </button>
 
-        <div className="bg-surface border border-slate-700 rounded-2xl p-6 md:p-8">
+        <div className="neu-card p-8">
           <div className="mb-8">
-            <h1 className="text-2xl font-bold text-white mb-2 flex items-center gap-2">
-              <Heart className="text-secondary" /> Plan a Date
+            <h1 className="text-2xl font-heading font-bold text-text-primary mb-2 flex items-center gap-3">
+              <Heart className="text-primary" /> Plan a Date
             </h1>
-            <p className="text-slate-400">
+            <p className="text-text-secondary">
               Schedule a productive session with {partner?.display_name || 'your partner'}.
             </p>
           </div>
 
           {/* Partner info */}
           {partner && (
-            <div className="flex items-center gap-3 p-3 bg-secondary/10 rounded-lg mb-6">
-              <div className="w-10 h-10 rounded-full bg-secondary/30 flex items-center justify-center text-secondary font-medium">
-                {partner.display_name?.[0]?.toUpperCase() || 'P'}
+            <div className="flex items-center gap-3 p-4 neu-card-inset rounded-neu mb-6">
+              <div className="w-10 h-10 rounded-full neu-icon-wrap flex items-center justify-center">
+                <span className="text-primary font-medium">
+                  {partner.display_name?.[0]?.toUpperCase() || 'P'}
+                </span>
               </div>
               <div>
-                <p className="text-sm text-slate-400">Partner</p>
-                <p className="text-white font-medium">{partner.display_name}</p>
+                <p className="text-sm text-text-secondary">Partner</p>
+                <p className="text-text-primary font-medium">{partner.display_name}</p>
               </div>
             </div>
           )}
 
           {error && (
-            <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded-lg text-red-400 text-sm">
+            <div className="mb-6 p-4 bg-error/10 border border-error/20 rounded-neu text-error text-sm">
               {error}
             </div>
           )}
 
           <form onSubmit={handleSubmit} className="space-y-8">
-            {/* 1. Basics */}
-            <section className="space-y-4">
-              <h2 className="text-lg font-semibold text-white flex items-center gap-2">
+            {/* Session Details */}
+            <section className="space-y-5">
+              <h2 className="text-lg font-heading font-semibold text-text-primary flex items-center gap-2">
                 <Clock size={18} className="text-primary" /> Session Details
               </h2>
               
               <div>
-                <label className="block text-sm font-medium text-slate-300 mb-1">Title</label>
+                <label className="block text-sm font-semibold text-text-primary mb-2">Title</label>
                 <input 
                   required
                   type="text" 
                   placeholder="e.g. Sunday Morning Code & Coffee" 
-                  className="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-slate-200 focus:outline-none focus:border-secondary"
+                  className="w-full neu-input p-4 text-text-primary placeholder:text-text-muted"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                 />
@@ -265,23 +263,23 @@ export const CoupleCreate: React.FC = () => {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                    <label className="block text-sm font-medium text-slate-300 mb-1">Thời gian bắt đầu</label>
+                    <label className="block text-sm font-semibold text-text-primary mb-2">Start Time</label>
                     <div className="relative">
                       <input 
                         required
                         type="datetime-local"
                         min={getMinDateTime()}
-                        className="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 pr-10 text-slate-200 focus:outline-none focus:border-secondary cursor-pointer [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:right-0 [&::-webkit-calendar-picker-indicator]:w-full [&::-webkit-calendar-picker-indicator]:h-full [&::-webkit-calendar-picker-indicator]:cursor-pointer"
+                        className="w-full neu-input p-4 pr-10 text-text-primary cursor-pointer [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:right-0 [&::-webkit-calendar-picker-indicator]:w-full [&::-webkit-calendar-picker-indicator]:h-full [&::-webkit-calendar-picker-indicator]:cursor-pointer"
                         value={startTime}
                         onChange={(e) => setStartTime(e.target.value)}
                       />
-                      <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 pointer-events-none" />
+                      <Calendar className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-text-muted pointer-events-none" />
                     </div>
                 </div>
                 <div>
-                    <label className="block text-sm font-medium text-slate-300 mb-1">Thời lượng</label>
+                    <label className="block text-sm font-semibold text-text-primary mb-2">Duration</label>
                     <select 
-                      className="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-slate-200 focus:outline-none focus:border-secondary"
+                      className="w-full neu-input p-4 text-text-primary cursor-pointer"
                       value={duration}
                       onChange={(e) => setDuration(e.target.value)}
                     >
@@ -294,19 +292,27 @@ export const CoupleCreate: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-300 mb-2">Mode</label>
+                <label className="block text-sm font-semibold text-text-primary mb-3">Mode</label>
                 <div className="flex gap-4">
                   <button
                     type="button"
                     onClick={() => setMode('online')}
-                    className={`flex-1 py-3 px-4 rounded-lg border flex items-center justify-center gap-2 transition-all ${mode === 'online' ? 'bg-secondary/20 border-secondary text-secondary' : 'bg-slate-900 border-slate-700 text-slate-400'}`}
+                    className={`flex-1 py-4 px-4 rounded-neu flex items-center justify-center gap-2 transition-all ${
+                      mode === 'online' 
+                        ? 'neu-btn-primary text-white shadow-neu' 
+                        : 'neu-btn text-text-secondary'
+                    }`}
                   >
                     <Laptop size={18} /> Online
                   </button>
                   <button
                     type="button"
                     onClick={() => setMode('offline')}
-                    className={`flex-1 py-3 px-4 rounded-lg border flex items-center justify-center gap-2 transition-all ${mode === 'offline' ? 'bg-secondary/20 border-secondary text-secondary' : 'bg-slate-900 border-slate-700 text-slate-400'}`}
+                    className={`flex-1 py-4 px-4 rounded-neu flex items-center justify-center gap-2 transition-all ${
+                      mode === 'offline' 
+                        ? 'neu-btn-primary text-white shadow-neu' 
+                        : 'neu-btn text-text-secondary'
+                    }`}
                   >
                     <MapPin size={18} /> Offline
                   </button>
@@ -315,11 +321,11 @@ export const CoupleCreate: React.FC = () => {
 
               {mode === 'offline' && (
                   <div className="animate-fade-in-up">
-                    <label className="block text-sm font-medium text-slate-300 mb-1">Location / Place</label>
+                    <label className="block text-sm font-semibold text-text-primary mb-2">Location / Place</label>
                     <input 
                       type="text" 
                       placeholder="e.g. The Library Cafe, Living Room" 
-                      className="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-slate-200 focus:outline-none focus:border-secondary"
+                      className="w-full neu-input p-4 text-text-primary placeholder:text-text-muted"
                       value={location}
                       onChange={(e) => setLocation(e.target.value)}
                     />
@@ -327,13 +333,13 @@ export const CoupleCreate: React.FC = () => {
               )}
             </section>
 
-            <div className="pt-6">
+            <div className="pt-4">
                 <Button 
                   type="submit" 
-                  variant="secondary" 
                   className="w-full font-bold text-lg" 
                   size="lg"
                   disabled={loading}
+                  icon={<Heart size={18} />}
                 >
                   {loading ? 'Creating...' : 'Schedule Date'}
                 </Button>

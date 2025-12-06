@@ -11,29 +11,197 @@
         theme: {
           extend: {
             colors: {
-              background: '#0f172a', // slate-950
-              surface: '#1e293b', // slate-800
-              primary: '#6366f1', // indigo-500
-              secondary: '#e11d48', // rose-600
-            }
+              // Soft Pink Neumorphic Palette
+              background: '#F0E6EA',
+              surface: '#F5ECF0',
+              'surface-dark': '#E8DDE2',
+              primary: '#E91E63',
+              'primary-light': '#F48FB1',
+              'primary-dark': '#C2185B',
+              secondary: '#9C27B0',
+              'secondary-light': '#CE93D8',
+              accent: '#FF4081',
+              // Text colors
+              'text-primary': '#4A3540',
+              'text-secondary': '#8B7A82',
+              'text-muted': '#A89BA0',
+              // Border & shadows
+              'border-soft': '#E0D4D9',
+              'shadow-light': 'rgba(255, 255, 255, 0.8)',
+              'shadow-dark': 'rgba(200, 180, 185, 0.6)',
+              // Status colors
+              success: '#4CAF50',
+              warning: '#FF9800',
+              error: '#F44336',
+            },
+            fontFamily: {
+              heading: ['Varela Round', 'sans-serif'],
+              body: ['Nunito Sans', 'sans-serif'],
+            },
+            boxShadow: {
+              'neu': '6px 6px 15px rgba(200, 180, 185, 0.5), -6px -6px 15px rgba(255, 255, 255, 0.9)',
+              'neu-sm': '4px 4px 10px rgba(200, 180, 185, 0.4), -4px -4px 10px rgba(255, 255, 255, 0.8)',
+              'neu-inset': 'inset 4px 4px 10px rgba(200, 180, 185, 0.5), inset -4px -4px 10px rgba(255, 255, 255, 0.7)',
+              'neu-inset-sm': 'inset 2px 2px 5px rgba(200, 180, 185, 0.4), inset -2px -2px 5px rgba(255, 255, 255, 0.6)',
+              'neu-flat': '0 4px 15px rgba(200, 180, 185, 0.3)',
+              'neu-hover': '8px 8px 20px rgba(200, 180, 185, 0.5), -8px -8px 20px rgba(255, 255, 255, 0.95)',
+              'neu-pressed': 'inset 6px 6px 12px rgba(200, 180, 185, 0.5), inset -6px -6px 12px rgba(255, 255, 255, 0.7)',
+            },
+            borderRadius: {
+              'neu': '16px',
+              'neu-lg': '24px',
+              'neu-xl': '32px',
+            },
+            animation: {
+              'fade-in-up': 'fadeInUp 0.5s ease-out',
+              'pulse-soft': 'pulseSoft 2s ease-in-out infinite',
+            },
+            keyframes: {
+              fadeInUp: {
+                '0%': { opacity: '0', transform: 'translateY(20px)' },
+                '100%': { opacity: '1', transform: 'translateY(0)' },
+              },
+              pulseSoft: {
+                '0%, 100%': { opacity: '1' },
+                '50%': { opacity: '0.7' },
+              },
+            },
           }
         }
       }
     </script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@300;400;500;600;700&family=Varela+Round&display=swap" rel="stylesheet">
     <style>
-      body {
-        font-family: 'Inter', sans-serif;
-        background-color: #0f172a;
-        color: #f8fafc;
+      * {
+        font-family: 'Nunito Sans', sans-serif;
       }
-      /* Hide scrollbar for clean UI in lists */
+      
+      h1, h2, h3, h4, h5, h6 {
+        font-family: 'Varela Round', sans-serif;
+      }
+      
+      body {
+        background-color: #F0E6EA;
+        color: #4A3540;
+      }
+
+      /* Neumorphic Button Styles */
+      .neu-btn {
+        background: linear-gradient(145deg, #F8F0F3, #E8DDE2);
+        box-shadow: 6px 6px 15px rgba(200, 180, 185, 0.5), -6px -6px 15px rgba(255, 255, 255, 0.9);
+        transition: all 0.2s ease;
+      }
+      
+      .neu-btn:hover {
+        box-shadow: 8px 8px 20px rgba(200, 180, 185, 0.5), -8px -8px 20px rgba(255, 255, 255, 0.95);
+      }
+      
+      .neu-btn:active {
+        box-shadow: inset 4px 4px 10px rgba(200, 180, 185, 0.5), inset -4px -4px 10px rgba(255, 255, 255, 0.7);
+      }
+
+      .neu-btn-primary {
+        background: linear-gradient(145deg, #F06292, #D81B60);
+        box-shadow: 6px 6px 15px rgba(200, 180, 185, 0.5), -6px -6px 15px rgba(255, 255, 255, 0.9);
+      }
+      
+      .neu-btn-primary:hover {
+        background: linear-gradient(145deg, #F48FB1, #E91E63);
+      }
+
+      /* Neumorphic Card */
+      .neu-card {
+        background: linear-gradient(145deg, #F8F0F3, #EDE4E8);
+        box-shadow: 6px 6px 15px rgba(200, 180, 185, 0.5), -6px -6px 15px rgba(255, 255, 255, 0.9);
+        border-radius: 16px;
+      }
+
+      .neu-card-inset {
+        background: #F0E6EA;
+        box-shadow: inset 4px 4px 10px rgba(200, 180, 185, 0.5), inset -4px -4px 10px rgba(255, 255, 255, 0.7);
+        border-radius: 16px;
+      }
+
+      /* Neumorphic Input */
+      .neu-input {
+        background: #F0E6EA;
+        box-shadow: inset 4px 4px 10px rgba(200, 180, 185, 0.4), inset -4px -4px 10px rgba(255, 255, 255, 0.6);
+        border: none;
+        border-radius: 12px;
+        transition: all 0.2s ease;
+      }
+      
+      .neu-input:focus {
+        box-shadow: inset 6px 6px 12px rgba(200, 180, 185, 0.5), inset -6px -6px 12px rgba(255, 255, 255, 0.7);
+        outline: 2px solid #F48FB1;
+      }
+
+      /* Scrollbar styling */
       .no-scrollbar::-webkit-scrollbar {
         display: none;
       }
       .no-scrollbar {
         -ms-overflow-style: none;
         scrollbar-width: none;
+      }
+
+      /* Custom scrollbar */
+      ::-webkit-scrollbar {
+        width: 8px;
+      }
+      ::-webkit-scrollbar-track {
+        background: #F0E6EA;
+        border-radius: 4px;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: #E0D4D9;
+        border-radius: 4px;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: #D0C4C9;
+      }
+
+      /* Neumorphic toggle/checkbox */
+      .neu-toggle {
+        background: #F0E6EA;
+        box-shadow: inset 4px 4px 8px rgba(200, 180, 185, 0.4), inset -4px -4px 8px rgba(255, 255, 255, 0.6);
+      }
+
+      /* Icon wrapper with soft shadow */
+      .neu-icon-wrap {
+        background: linear-gradient(145deg, #F8F0F3, #EDE4E8);
+        box-shadow: 4px 4px 10px rgba(200, 180, 185, 0.4), -4px -4px 10px rgba(255, 255, 255, 0.8);
+      }
+
+      /* Progress bar container */
+      .neu-progress {
+        background: #F0E6EA;
+        box-shadow: inset 3px 3px 6px rgba(200, 180, 185, 0.4), inset -3px -3px 6px rgba(255, 255, 255, 0.6);
+      }
+
+      /* Floating navbar effect */
+      .neu-navbar {
+        background: linear-gradient(145deg, rgba(248, 240, 243, 0.95), rgba(237, 228, 232, 0.95));
+        box-shadow: 0 4px 20px rgba(200, 180, 185, 0.3);
+        backdrop-filter: blur(10px);
+      }
+
+      /* Tab/pill navigation */
+      .neu-tab {
+        background: transparent;
+        transition: all 0.2s ease;
+      }
+      .neu-tab.active {
+        background: linear-gradient(145deg, #F8F0F3, #EDE4E8);
+        box-shadow: 4px 4px 10px rgba(200, 180, 185, 0.4), -4px -4px 10px rgba(255, 255, 255, 0.8);
+      }
+
+      /* Gradient text */
+      .gradient-text {
+        background: linear-gradient(135deg, #E91E63, #9C27B0);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
       }
     </style>
   </head>

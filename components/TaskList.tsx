@@ -49,50 +49,69 @@ export const TaskList: React.FC<TaskListProps> = ({
   const progress = tasks.length > 0 ? (completedCount / tasks.length) * 100 : 0;
 
   return (
-    <div className={`flex flex-col h-full ${variant === 'compact' ? '' : 'bg-surface/50 rounded-xl p-4 border border-slate-700'}`}>
-      <div className="flex items-center justify-between mb-4">
+    <div className={`flex flex-col h-full ${variant === 'compact' ? '' : 'neu-card p-5'}`}>
+      <div className="flex items-center justify-between mb-5">
         <div>
-          <h3 className="text-lg font-semibold text-slate-100">{title}</h3>
-          <p className="text-xs text-slate-400 mt-1">{completedCount}/{tasks.length} tasks completed</p>
+          <h3 className="text-lg font-heading font-semibold text-text-primary">{title}</h3>
+          <p className="text-xs text-text-secondary mt-1">{completedCount}/{tasks.length} tasks completed</p>
         </div>
         {tasks.length > 0 && (
            <div className="w-16 h-16 relative flex items-center justify-center">
              <svg className="transform -rotate-90 w-full h-full">
-               <circle cx="32" cy="32" r="28" stroke="currentColor" strokeWidth="4" fill="transparent" className="text-slate-700" />
-               <circle cx="32" cy="32" r="28" stroke="currentColor" strokeWidth="4" fill="transparent" strokeDasharray={175} strokeDashoffset={175 - (175 * progress) / 100} className="text-green-500 transition-all duration-500" />
+               <circle 
+                 cx="32" cy="32" r="28" 
+                 stroke="currentColor" 
+                 strokeWidth="4" 
+                 fill="transparent" 
+                 className="text-border-soft" 
+               />
+               <circle 
+                 cx="32" cy="32" r="28" 
+                 stroke="currentColor" 
+                 strokeWidth="4" 
+                 fill="transparent" 
+                 strokeDasharray={175} 
+                 strokeDashoffset={175 - (175 * progress) / 100} 
+                 className="text-success transition-all duration-500" 
+                 strokeLinecap="round"
+               />
              </svg>
-             <span className="absolute text-xs font-bold">{Math.round(progress)}%</span>
+             <span className="absolute text-xs font-bold text-text-primary">{Math.round(progress)}%</span>
            </div>
         )}
       </div>
 
-      <div className="flex-1 overflow-y-auto space-y-2 mb-4 pr-1 custom-scrollbar">
+      <div className="flex-1 overflow-y-auto space-y-3 mb-4 pr-1 no-scrollbar">
         {tasks.length === 0 && (
-          <div className="text-center py-8 text-slate-500 italic">
-            No tasks yet. {isOwner ? "Add one below!" : "Waiting for partner..."}
+          <div className="text-center py-10 neu-card-inset rounded-neu">
+            <p className="text-text-muted italic">
+              No tasks yet. {isOwner ? "Add one below!" : "Waiting for partner..."}
+            </p>
           </div>
         )}
         {tasks.map((task) => (
           <div 
             key={task.id} 
-            className={`group flex items-center p-3 rounded-lg border transition-all ${
-              task.done ? 'bg-slate-900/50 border-slate-800 opacity-60' : 'bg-slate-800 border-slate-700 hover:border-slate-600'
+            className={`group flex items-center p-4 rounded-neu transition-all ${
+              task.done 
+                ? 'neu-card-inset opacity-60' 
+                : 'neu-card hover:shadow-neu-hover'
             }`}
           >
             {isOwner ? (
               <button 
                 onClick={() => onToggle(task.id)}
-                className="mr-3 text-slate-400 hover:text-green-400 transition-colors"
+                className="mr-3 text-text-secondary hover:text-success transition-colors cursor-pointer"
               >
-                {task.done ? <CheckSquare size={20} className="text-green-500" /> : <Square size={20} />}
+                {task.done ? <CheckSquare size={20} className="text-success" /> : <Square size={20} />}
               </button>
             ) : (
-              <div className="mr-3 text-slate-400">
-                {task.done ? <CheckSquare size={20} className="text-green-500" /> : <Square size={20} />}
+              <div className="mr-3 text-text-secondary">
+                {task.done ? <CheckSquare size={20} className="text-success" /> : <Square size={20} />}
               </div>
             )}
             
-            <span className={`flex-1 text-sm ${task.done ? 'line-through text-slate-500' : 'text-slate-200'}`}>
+            <span className={`flex-1 text-sm ${task.done ? 'line-through text-text-muted' : 'text-text-primary'}`}>
               {task.title}
             </span>
 
@@ -103,12 +122,12 @@ export const TaskList: React.FC<TaskListProps> = ({
               }}
               disabled={!isOwner}
               title={isOwner ? "Click to change difficulty" : ""}
-              className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded ml-2 transition-all ${
-                isOwner ? 'cursor-pointer hover:brightness-110 active:scale-95' : 'cursor-default'
+              className={`text-[10px] uppercase font-bold px-2.5 py-1 rounded-full ml-2 transition-all ${
+                isOwner ? 'cursor-pointer hover:scale-105 active:scale-95' : 'cursor-default'
               } ${
-                (task.difficulty || 'medium') === 'hard' ? 'bg-red-900/50 text-red-400' :
-                (task.difficulty || 'medium') === 'medium' ? 'bg-yellow-900/50 text-yellow-400' :
-                'bg-green-900/50 text-green-400'
+                (task.difficulty || 'medium') === 'hard' ? 'bg-error/20 text-error' :
+                (task.difficulty || 'medium') === 'medium' ? 'bg-warning/20 text-warning' :
+                'bg-success/20 text-success'
               }`}
             >
               {task.difficulty || 'medium'}
@@ -117,7 +136,7 @@ export const TaskList: React.FC<TaskListProps> = ({
             {isOwner && (
               <button 
                 onClick={() => onDelete(task.id)}
-                className="ml-2 text-slate-600 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity"
+                className="ml-2 text-text-muted hover:text-error opacity-0 group-hover:opacity-100 transition-all cursor-pointer"
               >
                 <Trash2 size={16} />
               </button>
@@ -127,14 +146,14 @@ export const TaskList: React.FC<TaskListProps> = ({
       </div>
 
       {isOwner && (
-        <form onSubmit={handleAdd} className="mt-auto pt-2 border-t border-slate-700">
-          <div className="flex gap-2">
+        <form onSubmit={handleAdd} className="mt-auto pt-4 border-t border-border-soft">
+          <div className="flex gap-3">
             <input
               type="text"
               value={newTaskTitle}
               onChange={(e) => setNewTaskTitle(e.target.value)}
               placeholder="Add a new task..."
-              className="flex-1 bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-primary placeholder:text-slate-600"
+              className="flex-1 neu-input px-4 py-3 text-sm text-text-primary placeholder:text-text-muted"
             />
             <Button type="submit" size="sm" variant="primary" icon={<Plus size={16} />}>
               Add

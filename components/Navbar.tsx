@@ -18,12 +18,14 @@ export const Navbar: React.FC = () => {
   };
 
   return (
-    <nav className="bg-surface border-b border-slate-700 sticky top-0 z-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <nav className="neu-navbar sticky top-4 mx-4 z-50 rounded-neu-lg">
+      <div className="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
-          <Link to="/" className="flex items-center gap-2 text-white hover:text-primary transition-colors">
-            <Coffee className="text-primary" size={24} />
-            <span className="font-bold text-lg">Workdate.dev</span>
+          <Link to="/" className="flex items-center gap-2.5 text-text-primary hover:text-primary transition-colors group">
+            <div className="neu-icon-wrap p-2 rounded-xl group-hover:shadow-neu transition-shadow">
+              <Coffee className="text-primary" size={22} />
+            </div>
+            <span className="font-heading font-bold text-lg">Workdate.dev</span>
           </Link>
 
           <div className="flex items-center gap-4">
@@ -34,14 +36,14 @@ export const Navbar: React.FC = () => {
                     <img 
                       src={profile.avatarUrl} 
                       alt={profile.displayName}
-                      className="w-8 h-8 rounded-full border border-slate-600"
+                      className="w-9 h-9 rounded-full shadow-neu-sm border-2 border-white"
                     />
                   ) : (
-                    <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center border border-slate-600">
+                    <div className="w-9 h-9 rounded-full neu-icon-wrap flex items-center justify-center">
                       <User size={16} className="text-primary" />
                     </div>
                   )}
-                  <span className="text-slate-300 text-sm hidden sm:block">
+                  <span className="text-text-primary text-sm font-medium hidden sm:block">
                     {profile?.displayName || user.email}
                   </span>
                 </div>
@@ -56,7 +58,7 @@ export const Navbar: React.FC = () => {
                 </Button>
               </>
             ) : (
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-3">
                 <Link to="/login">
                   <Button variant="ghost" size="sm">
                     Sign In
@@ -75,4 +77,3 @@ export const Navbar: React.FC = () => {
     </nav>
   );
 };
-

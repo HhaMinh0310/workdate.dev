@@ -14,20 +14,46 @@ export const Button: React.FC<ButtonProps> = ({
   icon,
   ...props 
 }) => {
-  const baseStyles = "inline-flex items-center justify-center rounded-lg font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-background disabled:opacity-50 disabled:pointer-events-none";
+  const baseStyles = `
+    inline-flex items-center justify-center rounded-neu font-semibold 
+    transition-all duration-200 ease-out cursor-pointer
+    focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-background 
+    disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none
+    active:shadow-neu-pressed active:scale-[0.98]
+  `;
   
   const variants = {
-    primary: "bg-primary text-white hover:bg-indigo-600 focus:ring-indigo-500",
-    secondary: "bg-secondary text-white hover:bg-rose-700 focus:ring-rose-500",
-    outline: "border border-slate-600 text-slate-200 hover:bg-slate-800 focus:ring-slate-500",
-    ghost: "text-slate-400 hover:text-white hover:bg-slate-800",
-    danger: "bg-red-500 text-white hover:bg-red-600 focus:ring-red-500",
+    primary: `
+      bg-gradient-to-br from-primary to-primary-dark text-white
+      shadow-neu hover:shadow-neu-hover
+      focus:ring-primary-light
+    `,
+    secondary: `
+      bg-gradient-to-br from-secondary to-secondary/90 text-white
+      shadow-neu hover:shadow-neu-hover
+      focus:ring-secondary-light
+    `,
+    outline: `
+      bg-surface text-text-primary border-2 border-border-soft
+      shadow-neu-sm hover:shadow-neu hover:border-primary-light
+      focus:ring-primary-light
+    `,
+    ghost: `
+      bg-transparent text-text-secondary hover:text-primary
+      hover:bg-surface-dark/50
+      focus:ring-primary-light
+    `,
+    danger: `
+      bg-gradient-to-br from-error to-red-700 text-white
+      shadow-neu hover:shadow-neu-hover
+      focus:ring-red-300
+    `,
   };
 
   const sizes = {
-    sm: "h-8 px-3 text-sm",
-    md: "h-10 px-4 py-2",
-    lg: "h-12 px-6 text-lg",
+    sm: "h-9 px-4 text-sm gap-1.5",
+    md: "h-11 px-5 py-2.5 gap-2",
+    lg: "h-13 px-7 py-3 text-lg gap-2.5",
   };
 
   return (
@@ -35,7 +61,7 @@ export const Button: React.FC<ButtonProps> = ({
       className={`${baseStyles} ${variants[variant]} ${sizes[size]} ${className}`}
       {...props}
     >
-      {icon && <span className="mr-2">{icon}</span>}
+      {icon && <span className="flex-shrink-0">{icon}</span>}
       {children}
     </button>
   );
