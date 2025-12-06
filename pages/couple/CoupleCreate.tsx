@@ -30,9 +30,10 @@ const getMinDate = () => {
 export const CoupleCreate: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const defaultDateTime = getDefaultDateTime();
   const [title, setTitle] = useState('');
-  const [startDate, setStartDate] = useState(getDefaultDate());
-  const [startTime, setStartTime] = useState(getDefaultTime());
+  const [startDate, setStartDate] = useState(defaultDateTime.date);
+  const [startTime, setStartTime] = useState(defaultDateTime.time);
   const [duration, setDuration] = useState('1 Hour');
   const [mode, setMode] = useState<'online' | 'offline'>('online');
   const [location, setLocation] = useState('');
