@@ -53,6 +53,67 @@ export const partnershipService = {
       .single();
     if (error) throw error;
     return data;
+  },
+
+  /**
+   * Deactivate a partnership (soft delete)
+   * Sets status to 'inactive' so the relationship is preserved but not active
+   */
+  async deactivatePartnership(partnershipId: string) {
+    console.log('🔴 Deactivating partnership:', partnershipId);
+    
+    const { data, error } = await supabase
+      .from('partnerships')
+      .update({ 
+        status: 'inactive',
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', partnershipId)
+      .select()
+      .single();
+    
+    if (error) {
+      console.error('❌ Failed to deactivate partnership:', error);
+      throw error;
+    }
+    
+    console.log('✅ Partnership deactivated:', data);
+    return data;
+  },
+
+  /**
+   * Remove a partnership completely (hard delete)
+   * This will also trigger cascade delete of related couple_sessions if configured
+   */
+  async removePartnership(partnershipId: string) {
+    console.log('🗑️ Removing partnership:', partnershipId);
+    
+    const { error } = await supabase
+      .from('partnerships')
+      .delete()
+      .eq('id', partnershipId);
+    
+    if (error) {
+      console.error('❌ Failed to remove partnership:', error);
+      throw error;
+    }
+    
+    console.log('✅ Partnership removed');
+    return true;
+  },
+
+  /**
+   * Check if two users are partners
+   */
+  async checkPartnership(user1Id: string, user2Id: string) {
+    const { data, error } = await supabase
+      .from('partnerships')
+      .select('id, status')
+      .or(`and(user1_id.eq.${user1Id},user2_id.eq.${user2Id}),and(user1_id.eq.${user2Id},user2_id.eq.${user1Id})`)
+      .eq('status', 'active')
+      .maybeSingle();
+    
+    if (error) throw error;
+    return data;
   }
 };
-

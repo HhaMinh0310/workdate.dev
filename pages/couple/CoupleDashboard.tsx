@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Calendar, Plus, ArrowRight, MapPin, Laptop, UserPlus, Heart, Loader2 } from 'lucide-react';
+import { Calendar, Plus, ArrowRight, MapPin, Laptop, UserPlus, Heart, Loader2, Wifi, WifiOff } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { coupleSessionService } from '../../services/coupleSession.service';
 import { partnershipService } from '../../services/partnership.service';
+import { subscribeToCoupleSessions, subscribeToPartnership, unsubscribe, transformSession } from '../../services/realtime.service';
 import { CoupleSession } from '../../types';
 import { Button } from '../../components/ui/Button';
+import { RealtimeChannel } from '@supabase/supabase-js';
 
 export const CoupleDashboard: React.FC = () => {
   const { user } = useAuth();
@@ -14,7 +16,9 @@ export const CoupleDashboard: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [partnershipId, setPartnershipId] = useState<string | null>(null);
   const [partner, setPartner] = useState<any>(null);
+  const [isConnected, setIsConnected] = useState(false);
 
+  // Load initial data
   useEffect(() => {
     if (!user) {
       console.log('❌ No user found');
@@ -59,6 +63,66 @@ export const CoupleDashboard: React.FC = () => {
 
     loadData();
   }, [user]);
+
+  // Real-time subscriptions
+  useEffect(() => {
+    if (!partnershipId) return;
+
+    let sessionsChannel: RealtimeChannel | null = null;
+    let partnershipChannel: RealtimeChannel | null = null;
+
+    // Subscribe to session changes
+    sessionsChannel = subscribeToCoupleSessions(partnershipId, {
+      onInsert: (rawSession) => {
+        console.log('📥 New session created:', rawSession);
+        // Reload sessions to get full data with partners
+        coupleSessionService.getCoupleSessions(partnershipId).then(sessionsData => {
+          setSessions(sessionsData || []);
+        });
+      },
+      onUpdate: (rawSession) => {
+        console.log('📝 Session updated:', rawSession);
+        setSessions(prev => prev.map(s => 
+          s.id === rawSession.id 
+            ? { ...s, title: rawSession.title, mode: rawSession.mode, location: rawSession.location }
+            : s
+        ));
+      },
+      onDelete: (rawSession) => {
+        console.log('🗑️ Session deleted:', rawSession);
+        setSessions(prev => prev.filter(s => s.id !== rawSession.id));
+      }
+    });
+
+    // Subscribe to partnership changes
+    partnershipChannel = subscribeToPartnership(partnershipId, {
+      onUpdate: (rawPartnership) => {
+        console.log('👥 Partnership updated:', rawPartnership);
+        if (rawPartnership.status !== 'active') {
+          // Partnership was deactivated
+          setPartnershipId(null);
+          setPartner(null);
+          setSessions([]);
+        }
+      },
+      onDelete: (rawPartnership) => {
+        console.log('💔 Partnership deleted:', rawPartnership);
+        // Partnership was removed
+        setPartnershipId(null);
+        setPartner(null);
+        setSessions([]);
+      }
+    });
+
+    setIsConnected(true);
+
+    // Cleanup subscriptions on unmount
+    return () => {
+      setIsConnected(false);
+      if (sessionsChannel) unsubscribe(sessionsChannel);
+      if (partnershipChannel) unsubscribe(partnershipChannel);
+    };
+  }, [partnershipId]);
 
   if (loading) {
     return (
@@ -125,7 +189,16 @@ export const CoupleDashboard: React.FC = () => {
       {/* Header */}
       <div className="flex justify-between items-center mb-8">
         <div>
-          <h1 className="text-2xl font-heading font-bold text-text-primary">Couple Dashboard</h1>
+          <div className="flex items-center gap-3">
+            <h1 className="text-2xl font-heading font-bold text-text-primary">Couple Dashboard</h1>
+            {/* Real-time connection indicator */}
+            <div className={`flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium ${
+              isConnected ? 'bg-success/20 text-success' : 'bg-warning/20 text-warning'
+            }`}>
+              {isConnected ? <Wifi size={12} /> : <WifiOff size={12} />}
+              <span>{isConnected ? 'Live' : 'Offline'}</span>
+            </div>
+          </div>
           <p className="text-text-secondary">
             Working with {partner?.display_name || 'your partner'}
           </p>

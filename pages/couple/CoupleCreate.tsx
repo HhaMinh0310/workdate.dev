@@ -6,25 +6,33 @@ import { useAuth } from '../../contexts/AuthContext';
 import { coupleSessionService } from '../../services/coupleSession.service';
 import { partnershipService } from '../../services/partnership.service';
 
-// Helper to get default datetime (next hour from now)
-const getDefaultDateTime = () => {
+// Helper to get default date (today)
+const getDefaultDate = () => {
+  const now = new Date();
+  return now.toISOString().split('T')[0];
+};
+
+// Helper to get default time (next hour)
+const getDefaultTime = () => {
   const now = new Date();
   now.setHours(now.getHours() + 1);
   now.setMinutes(0);
-  now.setSeconds(0);
-  return now.toISOString().slice(0, 16);
+  const hours = now.getHours().toString().padStart(2, '0');
+  const minutes = now.getMinutes().toString().padStart(2, '0');
+  return `${hours}:${minutes}`;
 };
 
-// Helper to get min datetime (now)
-const getMinDateTime = () => {
-  return new Date().toISOString().slice(0, 16);
+// Helper to get min date (today)
+const getMinDate = () => {
+  return new Date().toISOString().split('T')[0];
 };
 
 export const CoupleCreate: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [title, setTitle] = useState('');
-  const [startTime, setStartTime] = useState(getDefaultDateTime());
+  const [startDate, setStartDate] = useState(getDefaultDate());
+  const [startTime, setStartTime] = useState(getDefaultTime());
   const [duration, setDuration] = useState('1 Hour');
   const [mode, setMode] = useState<'online' | 'offline'>('online');
   const [location, setLocation] = useState('');
@@ -66,8 +74,8 @@ export const CoupleCreate: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!title.trim() || !startTime) {
-      setError('Please provide a title and a start time.');
+    if (!title.trim() || !startDate || !startTime) {
+      setError('Please provide a title, date, and time.');
       return;
     }
 
@@ -85,30 +93,32 @@ export const CoupleCreate: React.FC = () => {
     setError(null);
 
     try {
-      const startDate = new Date(startTime);
-      let endDate = new Date(startDate);
+      // Combine date and time
+      const startDateTime = new Date(`${startDate}T${startTime}`);
+      let endDateTime = new Date(startDateTime);
+      
       switch (duration) {
         case '1 Hour':
-          endDate.setHours(startDate.getHours() + 1);
+          endDateTime.setHours(startDateTime.getHours() + 1);
           break;
         case '2 Hours':
-          endDate.setHours(startDate.getHours() + 2);
+          endDateTime.setHours(startDateTime.getHours() + 2);
           break;
         case '3 Hours':
-          endDate.setHours(startDate.getHours() + 3);
+          endDateTime.setHours(startDateTime.getHours() + 3);
           break;
         case 'Until Done':
-          endDate.setHours(startDate.getHours() + 8);
+          endDateTime.setHours(startDateTime.getHours() + 8);
           break;
         default:
-          endDate.setHours(startDate.getHours() + 1);
+          endDateTime.setHours(startDateTime.getHours() + 1);
       }
 
       await coupleSessionService.createCoupleSession({
         partnership_id: partnershipId,
         title,
-        start_time: startDate.toISOString(),
-        end_time: endDate.toISOString(),
+        start_time: startDateTime.toISOString(),
+        end_time: endDateTime.toISOString(),
         mode,
         location: mode === 'offline' ? location : undefined,
       });
@@ -126,6 +136,28 @@ export const CoupleCreate: React.FC = () => {
     navigator.clipboard.writeText(link);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  };
+
+  // Format date for display
+  const formatDateDisplay = (dateStr: string) => {
+    if (!dateStr) return '';
+    const date = new Date(dateStr);
+    return date.toLocaleDateString('en-US', { 
+      weekday: 'short', 
+      month: 'short', 
+      day: 'numeric',
+      year: 'numeric'
+    });
+  };
+
+  // Format time for display
+  const formatTimeDisplay = (timeStr: string) => {
+    if (!timeStr) return '';
+    const [hours, minutes] = timeStr.split(':');
+    const hour = parseInt(hours);
+    const ampm = hour >= 12 ? 'PM' : 'AM';
+    const hour12 = hour % 12 || 12;
+    return `${hour12}:${minutes} ${ampm}`;
   };
 
   // Show loading while checking partnership
@@ -255,42 +287,76 @@ export const CoupleCreate: React.FC = () => {
                   required
                   type="text" 
                   placeholder="e.g. Sunday Morning Code & Coffee" 
-                  className="w-full neu-input p-4 text-text-primary placeholder:text-text-muted"
+                  className="w-full neu-input p-4 text-text-primary placeholder:text-text-muted rounded-neu"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              {/* Date and Time - Separate inputs */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {/* Date Input */}
                 <div>
-                    <label className="block text-sm font-semibold text-text-primary mb-2">Start Time</label>
-                    <div className="relative">
-                      <input 
-                        required
-                        type="datetime-local"
-                        min={getMinDateTime()}
-                        className="w-full neu-input p-4 pr-10 text-text-primary cursor-pointer [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:right-0 [&::-webkit-calendar-picker-indicator]:w-full [&::-webkit-calendar-picker-indicator]:h-full [&::-webkit-calendar-picker-indicator]:cursor-pointer"
-                        value={startTime}
-                        onChange={(e) => setStartTime(e.target.value)}
-                      />
-                      <Calendar className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-text-muted pointer-events-none" />
-                    </div>
+                  <label className="block text-sm font-semibold text-text-primary mb-2">Date</label>
+                  <div className="relative">
+                    <input 
+                      required
+                      type="date"
+                      min={getMinDate()}
+                      className="w-full neu-input p-4 pr-12 text-text-primary cursor-pointer rounded-neu appearance-none"
+                      value={startDate}
+                      onChange={(e) => setStartDate(e.target.value)}
+                      style={{ colorScheme: 'light' }}
+                    />
+                    <Calendar className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-primary pointer-events-none" />
+                  </div>
+                  {startDate && (
+                    <p className="text-xs text-text-muted mt-1.5">{formatDateDisplay(startDate)}</p>
+                  )}
                 </div>
+
+                {/* Time Input */}
                 <div>
-                    <label className="block text-sm font-semibold text-text-primary mb-2">Duration</label>
-                    <select 
-                      className="w-full neu-input p-4 text-text-primary cursor-pointer"
-                      value={duration}
-                      onChange={(e) => setDuration(e.target.value)}
-                    >
-                        <option>1 Hour</option>
-                        <option>2 Hours</option>
-                        <option>3 Hours</option>
-                        <option>Until Done</option>
-                    </select>
+                  <label className="block text-sm font-semibold text-text-primary mb-2">Time</label>
+                  <div className="relative">
+                    <input 
+                      required
+                      type="time"
+                      className="w-full neu-input p-4 pr-12 text-text-primary cursor-pointer rounded-neu appearance-none"
+                      value={startTime}
+                      onChange={(e) => setStartTime(e.target.value)}
+                      style={{ colorScheme: 'light' }}
+                    />
+                    <Clock className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-primary pointer-events-none" />
+                  </div>
+                  {startTime && (
+                    <p className="text-xs text-text-muted mt-1.5">{formatTimeDisplay(startTime)}</p>
+                  )}
+                </div>
+
+                {/* Duration */}
+                <div>
+                  <label className="block text-sm font-semibold text-text-primary mb-2">Duration</label>
+                  <select 
+                    className="w-full neu-input p-4 text-text-primary cursor-pointer rounded-neu appearance-none bg-no-repeat"
+                    value={duration}
+                    onChange={(e) => setDuration(e.target.value)}
+                    style={{ 
+                      backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23E91E63' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")`,
+                      backgroundPosition: 'right 1rem center',
+                      backgroundSize: '1.25rem',
+                      paddingRight: '3rem'
+                    }}
+                  >
+                    <option value="1 Hour">1 Hour</option>
+                    <option value="2 Hours">2 Hours</option>
+                    <option value="3 Hours">3 Hours</option>
+                    <option value="Until Done">Until Done</option>
+                  </select>
                 </div>
               </div>
 
+              {/* Mode Selection */}
               <div>
                 <label className="block text-sm font-semibold text-text-primary mb-3">Mode</label>
                 <div className="flex gap-4">
@@ -300,7 +366,7 @@ export const CoupleCreate: React.FC = () => {
                     className={`flex-1 py-4 px-4 rounded-neu flex items-center justify-center gap-2 transition-all ${
                       mode === 'online' 
                         ? 'neu-btn-primary text-white shadow-neu' 
-                        : 'neu-btn text-text-secondary'
+                        : 'neu-btn text-text-secondary hover:text-primary'
                     }`}
                   >
                     <Laptop size={18} /> Online
@@ -311,7 +377,7 @@ export const CoupleCreate: React.FC = () => {
                     className={`flex-1 py-4 px-4 rounded-neu flex items-center justify-center gap-2 transition-all ${
                       mode === 'offline' 
                         ? 'neu-btn-primary text-white shadow-neu' 
-                        : 'neu-btn text-text-secondary'
+                        : 'neu-btn text-text-secondary hover:text-primary'
                     }`}
                   >
                     <MapPin size={18} /> Offline
@@ -320,29 +386,29 @@ export const CoupleCreate: React.FC = () => {
               </div>
 
               {mode === 'offline' && (
-                  <div className="animate-fade-in-up">
-                    <label className="block text-sm font-semibold text-text-primary mb-2">Location / Place</label>
-                    <input 
-                      type="text" 
-                      placeholder="e.g. The Library Cafe, Living Room" 
-                      className="w-full neu-input p-4 text-text-primary placeholder:text-text-muted"
-                      value={location}
-                      onChange={(e) => setLocation(e.target.value)}
-                    />
-                  </div>
+                <div className="animate-fade-in-up">
+                  <label className="block text-sm font-semibold text-text-primary mb-2">Location / Place</label>
+                  <input 
+                    type="text" 
+                    placeholder="e.g. The Library Cafe, Living Room" 
+                    className="w-full neu-input p-4 text-text-primary placeholder:text-text-muted rounded-neu"
+                    value={location}
+                    onChange={(e) => setLocation(e.target.value)}
+                  />
+                </div>
               )}
             </section>
 
             <div className="pt-4">
-                <Button 
-                  type="submit" 
-                  className="w-full font-bold text-lg" 
-                  size="lg"
-                  disabled={loading}
-                  icon={<Heart size={18} />}
-                >
-                  {loading ? 'Creating...' : 'Schedule Date'}
-                </Button>
+              <Button 
+                type="submit" 
+                className="w-full font-bold text-lg" 
+                size="lg"
+                disabled={loading}
+                icon={<Heart size={18} />}
+              >
+                {loading ? 'Creating...' : 'Schedule Date'}
+              </Button>
             </div>
 
           </form>

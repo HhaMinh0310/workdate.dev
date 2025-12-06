@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { ChevronLeft, Gift, Lock, Clock, Settings, MapPin, Laptop, Loader2 } from 'lucide-react';
+import { ChevronLeft, Gift, Lock, Clock, Settings, MapPin, Laptop, Loader2, Wifi, WifiOff } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { coupleSessionService } from '../../services/coupleSession.service';
+import { subscribeToSessionTasks, subscribeToSessionRewards, unsubscribe, transformTask, transformReward } from '../../services/realtime.service';
 import { CoupleSession, Task } from '../../types';
 import { TaskList } from '../../components/TaskList';
 import { Button } from '../../components/ui/Button';
+import { RealtimeChannel } from '@supabase/supabase-js';
 
 export const CoupleSessionRoom: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -15,7 +17,9 @@ export const CoupleSessionRoom: React.FC = () => {
   const [rewardText, setRewardText] = useState('');
   const [activeTab, setActiveTab] = useState<'my' | 'partner'>('my');
   const [error, setError] = useState<string | null>(null);
+  const [isConnected, setIsConnected] = useState(false);
 
+  // Load session data
   useEffect(() => {
     if (!id || !user) {
       setLoading(false);
@@ -27,12 +31,12 @@ export const CoupleSessionRoom: React.FC = () => {
         const sessionData = await coupleSessionService.getCoupleSessionById(id);
         setSession({
           ...sessionData,
-          partners: [],
+          partners: sessionData.partners || [],
           tasks: sessionData.tasks || [],
           rewards: sessionData.rewards || []
         });
         
-        const myReward = sessionData.rewards?.find((r: any) => r.giver_user_id === user.id);
+        const myReward = sessionData.rewards?.find((r: any) => r.giver_user_id === user.id || r.giverUserId === user.id);
         if (myReward) setRewardText(myReward.description);
       } catch (err: any) {
         setError(err.message || 'Failed to load session');
@@ -43,6 +47,85 @@ export const CoupleSessionRoom: React.FC = () => {
 
     loadSession();
   }, [id, user]);
+
+  // Real-time subscriptions
+  useEffect(() => {
+    if (!id || !session) return;
+
+    let tasksChannel: RealtimeChannel | null = null;
+    let rewardsChannel: RealtimeChannel | null = null;
+
+    // Subscribe to task changes
+    tasksChannel = subscribeToSessionTasks(id, {
+      onInsert: (rawTask) => {
+        console.log('📥 Task inserted:', rawTask);
+        const task = transformTask(rawTask);
+        setSession(prev => {
+          if (!prev) return null;
+          // Avoid duplicates
+          if (prev.tasks.some(t => t.id === task.id)) return prev;
+          return { ...prev, tasks: [...prev.tasks, task] };
+        });
+      },
+      onUpdate: (rawTask) => {
+        console.log('📝 Task updated:', rawTask);
+        const task = transformTask(rawTask);
+        setSession(prev => {
+          if (!prev) return null;
+          return {
+            ...prev,
+            tasks: prev.tasks.map(t => t.id === task.id ? task : t)
+          };
+        });
+      },
+      onDelete: (rawTask) => {
+        console.log('🗑️ Task deleted:', rawTask);
+        setSession(prev => {
+          if (!prev) return null;
+          return {
+            ...prev,
+            tasks: prev.tasks.filter(t => t.id !== rawTask.id)
+          };
+        });
+      }
+    });
+
+    // Subscribe to reward changes
+    rewardsChannel = subscribeToSessionRewards(id, {
+      onInsert: (rawReward) => {
+        console.log('🎁 Reward inserted:', rawReward);
+        // Only update if it's a reward for the current user (not visible to giver)
+        if (rawReward.receiver_user_id === user?.id) {
+          setSession(prev => {
+            if (!prev) return null;
+            const reward = transformReward(rawReward);
+            if (prev.rewards.some(r => r.id === reward.id)) return prev;
+            return { ...prev, rewards: [...prev.rewards, reward] };
+          });
+        }
+      },
+      onUpdate: (rawReward) => {
+        console.log('🎁 Reward updated:', rawReward);
+        const reward = transformReward(rawReward);
+        setSession(prev => {
+          if (!prev) return null;
+          return {
+            ...prev,
+            rewards: prev.rewards.map(r => r.id === reward.id ? reward : r)
+          };
+        });
+      }
+    });
+
+    setIsConnected(true);
+
+    // Cleanup subscriptions on unmount
+    return () => {
+      setIsConnected(false);
+      if (tasksChannel) unsubscribe(tasksChannel);
+      if (rewardsChannel) unsubscribe(rewardsChannel);
+    };
+  }, [id, session?.id, user?.id]);
 
   if (loading) {
     return (
@@ -100,13 +183,7 @@ export const CoupleSessionRoom: React.FC = () => {
       if (!task) return;
       
       await coupleSessionService.updateTask(taskId, { is_done: !task.done });
-      setSession(prev => {
-        if (!prev) return null;
-        return {
-          ...prev,
-          tasks: prev.tasks.map(t => t.id === taskId ? { ...t, done: !t.done } : t)
-        };
-      });
+      // Local state will be updated via real-time subscription
     } catch (err: any) {
       alert('Failed to update task: ' + err.message);
     }
@@ -115,13 +192,7 @@ export const CoupleSessionRoom: React.FC = () => {
   const handleDifficultyChange = async (taskId: string, newDifficulty: 'easy' | 'medium' | 'hard') => {
     try {
       await coupleSessionService.updateTask(taskId, { difficulty: newDifficulty });
-      setSession(prev => {
-        if (!prev) return null;
-        return {
-          ...prev,
-          tasks: prev.tasks.map(t => t.id === taskId ? { ...t, difficulty: newDifficulty } : t)
-        };
-      });
+      // Local state will be updated via real-time subscription
     } catch (err: any) {
       alert('Failed to update task: ' + err.message);
     }
@@ -131,23 +202,13 @@ export const CoupleSessionRoom: React.FC = () => {
     if (!session || !user) return;
     
     try {
-      const newTask = await coupleSessionService.createTask(session.id, {
+      await coupleSessionService.createTask(session.id, {
         owner_user_id: user.id,
         title,
         is_done: false,
         difficulty: 'medium'
       });
-      
-      setSession(prev => prev ? { 
-        ...prev, 
-        tasks: [...prev.tasks, {
-          id: newTask.id,
-          ownerUserId: newTask.ownerUserId,
-          title: newTask.title,
-          done: newTask.done,
-          difficulty: newTask.difficulty
-        }] 
-      } : null);
+      // Local state will be updated via real-time subscription
     } catch (err: any) {
       alert('Failed to create task: ' + err.message);
     }
@@ -156,7 +217,7 @@ export const CoupleSessionRoom: React.FC = () => {
   const handleTaskDelete = async (taskId: string) => {
     try {
       await coupleSessionService.deleteTask(taskId);
-      setSession(prev => prev ? { ...prev, tasks: prev.tasks.filter(t => t.id !== taskId) } : null);
+      // Local state will be updated via real-time subscription
     } catch (err: any) {
       alert('Failed to delete task: ' + err.message);
     }
@@ -165,7 +226,7 @@ export const CoupleSessionRoom: React.FC = () => {
   const handleSaveReward = async () => {
     if (!session || !user || !rewardText.trim()) return;
     
-    const partnerUserId = '';
+    const partnerUserId = session.partners.find(p => p.id !== user.id)?.id || '';
     
     if (!partnerUserId) {
       alert('Partner not found');
@@ -214,9 +275,22 @@ export const CoupleSessionRoom: React.FC = () => {
           </div>
           
           <div className="flex items-center gap-2">
+            {/* Real-time connection indicator */}
+            <div className={`flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium ${
+              isConnected ? 'bg-success/20 text-success' : 'bg-warning/20 text-warning'
+            }`}>
+              {isConnected ? <Wifi size={12} /> : <WifiOff size={12} />}
+              <span className="hidden sm:inline">{isConnected ? 'Live' : 'Offline'}</span>
+            </div>
+            
             <div className="flex -space-x-2">
                 {session.partners.map(p => (
-                    <img key={p.id} src={p.avatarUrl} className="w-8 h-8 rounded-full border-2 border-background shadow-neu-sm" />
+                    <div 
+                      key={p.id}
+                      className="w-8 h-8 rounded-full neu-icon-wrap flex items-center justify-center text-primary text-xs font-medium border-2 border-background"
+                    >
+                      {p.displayName?.[0]?.toUpperCase() || '?'}
+                    </div>
                 ))}
             </div>
             <button className="neu-icon-wrap p-2 rounded-xl text-text-secondary hover:text-primary transition-colors">
@@ -275,7 +349,7 @@ export const CoupleSessionRoom: React.FC = () => {
                 <h3 className="font-heading font-semibold text-sm">Reward for {partnerUser?.displayName || 'Partner'}</h3>
               </div>
               <textarea 
-                className="w-full neu-input p-4 text-sm text-text-primary placeholder:text-text-muted resize-none h-24"
+                className="w-full neu-input p-4 text-sm text-text-primary placeholder:text-text-muted resize-none h-24 rounded-neu"
                 placeholder={`What will you give ${partnerUser?.displayName || 'your partner'} if they finish their tasks? (Hidden from them)`}
                 value={rewardText}
                 onChange={(e) => setRewardText(e.target.value)}
