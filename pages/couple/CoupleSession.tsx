@@ -18,6 +18,60 @@ export const CoupleSessionRoom: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'my' | 'partner'>('my');
   const [error, setError] = useState<string | null>(null);
   const [isConnected, setIsConnected] = useState(false);
+  const [timeRemaining, setTimeRemaining] = useState<string>('--:--');
+  const [sessionStatus, setSessionStatus] = useState<'not-started' | 'in-progress' | 'ended'>('not-started');
+
+  // Calculate time remaining
+  const calculateTimeRemaining = () => {
+    if (!session) return;
+
+    const now = new Date().getTime();
+    const startTime = new Date(session.startTime).getTime();
+    const endTime = new Date(session.endTime).getTime();
+
+    // Check if session hasn't started yet
+    if (now < startTime) {
+      setSessionStatus('not-started');
+      const timeUntilStart = startTime - now;
+      const hours = Math.floor(timeUntilStart / (1000 * 60 * 60));
+      const minutes = Math.floor((timeUntilStart % (1000 * 60 * 60)) / (1000 * 60));
+      setTimeRemaining(`Starts in ${hours > 0 ? `${hours}h ` : ''}${minutes}m`);
+      return;
+    }
+
+    // Check if session has ended
+    if (now > endTime) {
+      setSessionStatus('ended');
+      setTimeRemaining('Session ended');
+      return;
+    }
+
+    // Session is in progress
+    setSessionStatus('in-progress');
+    const remaining = endTime - now;
+    const hours = Math.floor(remaining / (1000 * 60 * 60));
+    const minutes = Math.floor((remaining % (1000 * 60 * 60)) / (1000 * 60));
+    const seconds = Math.floor((remaining % (1000 * 60)) / 1000);
+
+    if (hours > 0) {
+      setTimeRemaining(`${hours}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`);
+    } else {
+      setTimeRemaining(`${minutes}:${seconds.toString().padStart(2, '0')}`);
+    }
+  };
+
+  // Countdown timer
+  useEffect(() => {
+    if (!session) return;
+
+    // Initial calculation
+    calculateTimeRemaining();
+
+    // Update every second
+    const interval = setInterval(calculateTimeRemaining, 1000);
+
+    return () => clearInterval(interval);
+  }, [session]);
 
   // Load session data
   useEffect(() => {
@@ -259,7 +313,13 @@ export const CoupleSessionRoom: React.FC = () => {
             <div>
               <h1 className="font-heading font-bold text-text-primary text-sm md:text-base">{session.title}</h1>
               <div className="flex items-center gap-2 text-xs text-text-secondary">
-                <span className="flex items-center gap-1"><Clock size={12}/> 45:00 remaining</span>
+                <span className={`flex items-center gap-1 font-medium ${
+                  sessionStatus === 'ended' ? 'text-error' : 
+                  sessionStatus === 'in-progress' ? 'text-success' : 
+                  'text-warning'
+                }`}>
+                  <Clock size={12}/> {timeRemaining}
+                </span>
                 <span className="w-1 h-1 bg-border-soft rounded-full"></span>
                 {session.mode === 'offline' ? (
                    <span className="flex items-center gap-1 text-warning">
