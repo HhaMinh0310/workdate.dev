@@ -20,8 +20,8 @@ export const Login: React.FC = () => {
 
     try {
       await signIn(email, password);
-      // Redirect to the page user was trying to access, or home
-      const from = (location.state as any)?.from?.pathname || '/';
+      // Redirect to the page user was trying to access, or dashboard
+      const from = (location.state as any)?.from?.pathname || '/dashboard';
       navigate(from, { replace: true });
     } catch (err: any) {
       setError(err.message || 'Failed to sign in');

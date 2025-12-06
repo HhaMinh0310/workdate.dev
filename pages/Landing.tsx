@@ -5,10 +5,19 @@ import {
   CheckCircle, Gift, Target, Sparkles, Code, MessageCircle 
 } from 'lucide-react';
 import { Button } from '../components/ui/Button';
+import { useAuth } from '../contexts/AuthContext';
 
 export const Landing: React.FC = () => {
   const navigate = useNavigate();
+  const { user, loading } = useAuth();
   const [activeSection, setActiveSection] = useState('');
+
+  // Redirect authenticated users to dashboard
+  useEffect(() => {
+    if (!loading && user) {
+      navigate('/dashboard', { replace: true });
+    }
+  }, [user, loading, navigate]);
 
   // Smooth scroll to section
   const scrollToSection = (sectionId: string) => {
