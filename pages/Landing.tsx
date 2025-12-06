@@ -12,10 +12,10 @@ export const Landing: React.FC = () => {
   const { user, loading } = useAuth();
   const [activeSection, setActiveSection] = useState('');
 
-  // Redirect authenticated users to dashboard
+  // Redirect authenticated users to couple (default tab)
   useEffect(() => {
     if (!loading && user) {
-      navigate('/dashboard', { replace: true });
+      navigate('/couple', { replace: true });
     }
   }, [user, loading, navigate]);
 

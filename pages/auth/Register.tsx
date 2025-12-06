@@ -54,7 +54,7 @@ export const Register: React.FC = () => {
         
         try {
           await partnershipService.createPartnership(inviteUserId, result.user.id);
-          navigate('/dashboard');
+          navigate('/couple');
           return;
         } catch (partnerErr: any) {
           console.error('Failed to create partnership:', partnerErr);
@@ -62,7 +62,7 @@ export const Register: React.FC = () => {
         }
       }
       
-      navigate('/dashboard');
+      navigate('/couple');
     } catch (err: any) {
       setError(err.message || 'Failed to sign up');
     } finally {

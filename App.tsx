@@ -3,12 +3,14 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { Navbar } from './components/Navbar';
+import { DashboardLayout } from './components/DashboardLayout';
 import { Landing } from './pages/Landing';
 import { Dashboard } from './pages/Dashboard';
 import { CoupleDashboard } from './pages/couple/CoupleDashboard';
 import { CoupleSessionRoom } from './pages/couple/CoupleSession';
 import { CoupleCreate } from './pages/couple/CoupleCreate';
 import { FindPartner } from './pages/couple/FindPartner';
+import { SoloDashboard } from './pages/solo/SoloDashboard';
 import { SoloCreate } from './pages/solo/SoloCreate';
 import { SoloBrowse } from './pages/solo/SoloBrowse';
 import { Login } from './pages/auth/Login';
@@ -35,7 +37,7 @@ const App: React.FC = () => {
             } 
           />
 
-          {/* Main Dashboard - Authenticated users land here */}
+          {/* Main Dashboard - Settings tab */}
           <Route 
             path="/dashboard" 
             element={
@@ -45,13 +47,14 @@ const App: React.FC = () => {
             } 
           />
 
-          {/* Protected Routes - Deep links for Couple Mode */}
+          {/* Couple Mode Routes - with DashboardLayout */}
           <Route 
             path="/couple" 
             element={
               <ProtectedRoute>
-                <Navbar />
-                <CoupleDashboard />
+                <DashboardLayout>
+                  <CoupleDashboard />
+                </DashboardLayout>
               </ProtectedRoute>
             } 
           />
@@ -59,8 +62,9 @@ const App: React.FC = () => {
             path="/couple/create" 
             element={
               <ProtectedRoute>
-                <Navbar />
-                <CoupleCreate />
+                <DashboardLayout>
+                  <CoupleCreate />
+                </DashboardLayout>
               </ProtectedRoute>
             } 
           />
@@ -68,8 +72,9 @@ const App: React.FC = () => {
             path="/couple/find-partner" 
             element={
               <ProtectedRoute>
-                <Navbar />
-                <FindPartner />
+                <DashboardLayout>
+                  <FindPartner />
+                </DashboardLayout>
               </ProtectedRoute>
             } 
           />
@@ -82,13 +87,24 @@ const App: React.FC = () => {
             } 
           />
 
-          {/* Protected Routes - Deep links for Solo Mode */}
+          {/* Solo Mode Routes - with DashboardLayout */}
+          <Route 
+            path="/solo" 
+            element={
+              <ProtectedRoute>
+                <DashboardLayout>
+                  <SoloDashboard />
+                </DashboardLayout>
+              </ProtectedRoute>
+            } 
+          />
           <Route 
             path="/solo/create" 
             element={
               <ProtectedRoute>
-                <Navbar />
-                <SoloCreate />
+                <DashboardLayout>
+                  <SoloCreate />
+                </DashboardLayout>
               </ProtectedRoute>
             } 
           />
